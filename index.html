@@ -1,0 +1,3258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DMLS 3D Printing Quote Calculator</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #0066cc;
+            --secondary-color: #f5f5f5;
+            --accent-color: #ff6600;
+            --text-color: #333;
+            --border-color: #ddd;
+            --success-color: #4CAF50;
+            --warning-color: #FFC107;
+            --info-color: #2196F3;
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #f8f9fa;
+            color: var(--text-color);
+            line-height: 1.6;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 20px 0;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        header h1 {
+            text-align: center;
+            font-size: 2.2rem;
+        }
+        
+        /* Progress steps */
+        .steps-container {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 30px;
+            position: relative;
+        }
+        
+        .steps-container::after {
+            content: '';
+            position: absolute;
+            top: 25px;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background-color: var(--border-color);
+            z-index: 1;
+        }
+        
+        .step {
+            text-align: center;
+            position: relative;
+            z-index: 2;
+        }
+        
+        .step-circle {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background-color: white;
+            border: 2px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 10px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+        
+        .step.active .step-circle {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+            color: white;
+        }
+        
+        .step.completed .step-circle {
+            background-color: var(--success-color);
+            border-color: var(--success-color);
+            color: white;
+        }
+        
+        /* Cards and forms */
+        .card {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 30px;
+            margin-bottom: 30px;
+        }
+        
+        .card h2 {
+            margin-bottom: 20px;
+            color: var(--primary-color);
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 10px;
+        }
+        
+        .form-section {
+            display: none;
+        }
+        
+        .form-section.active {
+            display: block;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-row {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .form-col {
+            flex: 1;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+        
+        input[type="text"],
+        input[type="number"],
+        input[type="date"],
+        select,
+        textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        
+        input[type="number"] {
+            text-align: right;
+        }
+        
+        select {
+            height: 45px;
+        }
+        
+        /* Buttons */
+        .btn {
+            display: inline-block;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            font-size: 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        
+        .btn:hover {
+            background-color: #0055aa;
+        }
+        
+        .btn:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        
+        .btn-secondary {
+            background-color: #6c757d;
+        }
+        
+        .btn-secondary:hover {
+            background-color: #5a6268;
+        }
+        
+        .btn-info {
+            background-color: var(--info-color);
+        }
+        
+        .btn-info:hover {
+            background-color: #0b7dda;
+        }
+        
+        .navigation-buttons {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 30px;
+        }
+        
+        /* File upload */
+        .file-upload-container {
+            border: 2px dashed var(--border-color);
+            border-radius: 8px;
+            padding: 40px;
+            text-align: center;
+            margin-bottom: 20px;
+            position: relative;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .file-upload-container:hover {
+            border-color: var(--primary-color);
+        }
+        
+        .file-upload-container input[type="file"] {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            cursor: pointer;
+        }
+        
+        .upload-icon {
+            font-size: 48px;
+            color: var(--primary-color);
+            margin-bottom: 15px;
+        }
+        
+        /* Material selection */
+        .material-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .material-card {
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .material-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        .material-card.selected {
+            border-color: var(--primary-color);
+            background-color: rgba(0, 102, 204, 0.05);
+        }
+        
+        .material-card h3 {
+            margin-bottom: 10px;
+            color: var(--primary-color);
+        }
+        
+        /* Checkbox groups */
+        .checkbox-group {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            padding: 8px;
+            background-color: #f8f9fa;
+            border-radius: 4px;
+            transition: background-color 0.2s;
+        }
+        
+        .checkbox-item:hover {
+            background-color: #e9ecef;
+        }
+        
+        .checkbox-item input[type="checkbox"] {
+            margin-right: 8px;
+            width: 18px;
+            height: 18px;
+        }
+        
+        .checkbox-item label {
+            margin: 0;
+            font-weight: normal;
+            cursor: pointer;
+        }
+        
+        /* Model info display */
+        .model-info {
+            display: none;
+            margin-top: 20px;
+            padding: 20px;
+            background-color: #f8f9fa;
+            border-radius: 6px;
+        }
+        
+        .model-info h3 {
+            margin-bottom: 15px;
+            color: var(--primary-color);
+        }
+        
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+        }
+        
+        .info-item {
+            padding: 10px;
+            background-color: white;
+            border-radius: 4px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        
+        .info-item strong {
+            color: var(--primary-color);
+        }
+        
+        /* 3D Model viewer */
+        #model-viewer-container {
+            width: 100%;
+            height: 300px;
+            background-color: #f0f0f0;
+            margin-top: 20px;
+            position: relative;
+            overflow: hidden;
+            border-radius: 6px;
+        }
+        
+        .loading-indicator {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+        }
+        
+        .spinner {
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid var(--primary-color);
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 2s linear infinite;
+            margin: 0 auto 15px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* Quote and pricing */
+        .quote-summary {
+            display: none;
+        }
+        
+        .cost-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        
+        .cost-table th, .cost-table td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .cost-table th {
+            background-color: var(--secondary-color);
+            font-weight: 600;
+        }
+        
+        .cost-table tr:last-child td {
+            font-weight: bold;
+            background-color: #f8f9fa;
+        }
+        
+        .cost-table td.number {
+            text-align: right;
+        }
+        
+        .quote-card {
+            padding: 20px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            margin-bottom: 30px;
+            background-color: #f9f9f9;
+        }
+        
+        .quote-header {
+            margin-bottom: 15px;
+        }
+        
+        .quote-amount {
+            font-size: 28px;
+            font-weight: bold;
+            color: var(--primary-color);
+            margin-bottom: 15px;
+        }
+        
+        .quote-amount small {
+            display: block;
+            font-size: 16px;
+            color: #666;
+            font-weight: normal;
+        }
+        
+        .download-options {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .download-btn {
+            display: inline-block;
+            background-color: var(--accent-color);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            font-size: 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            flex: 1;
+            min-width: 200px;
+            text-align: center;
+        }
+        
+        .download-btn:hover {
+            background-color: #e55c00;
+        }
+        
+        .download-btn-light {
+            background-color: #6c757d;
+        }
+        
+        .download-btn-light:hover {
+            background-color: #5a6268;
+        }
+        
+        .margin-display {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 5px;
+        }
+        
+        .margin-display span {
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+        
+        input[type="range"] {
+            width: 100%;
+            margin: 10px 0;
+        }
+        
+        .optimization-tips {
+            margin-top: 30px;
+            padding: 15px;
+            background-color: #e8f4fd;
+            border-left: 4px solid var(--primary-color);
+            border-radius: 4px;
+        }
+        
+        .optimization-tips h3 {
+            margin-bottom: 10px;
+            color: var(--primary-color);
+        }
+        
+        .property-bar {
+            height: 10px;
+            background-color: #eee;
+            border-radius: 5px;
+            margin-bottom: 10px;
+        }
+        
+        .property-fill {
+            height: 100%;
+            background-color: var(--primary-color);
+            border-radius: 5px;
+        }
+        
+        .property-label {
+            font-size: 14px;
+            margin-bottom: 2px;
+        }
+        
+        /* Detailed breakdown */
+        .cost-breakdown-toggle {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 20px 0;
+            cursor: pointer;
+            color: var(--primary-color);
+            font-weight: 500;
+        }
+        
+        .cost-breakdown-toggle i {
+            margin-left: 8px;
+            transition: transform 0.3s ease;
+        }
+        
+        .cost-breakdown-toggle.expanded i {
+            transform: rotate(180deg);
+        }
+        
+        .cost-breakdown-detail {
+            display: none;
+            margin-top: 20px;
+        }
+        
+        .cost-detail-card {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+            margin-bottom: 15px;
+            overflow: hidden;
+        }
+        
+        .cost-detail-header {
+            background-color: var(--secondary-color);
+            padding: 12px 15px;
+            font-weight: 600;
+            display: flex;
+            justify-content: space-between;
+            cursor: pointer;
+        }
+        
+        .cost-detail-header i {
+            transition: transform 0.3s ease;
+        }
+        
+        .cost-detail-header.active i {
+            transform: rotate(180deg);
+        }
+        
+        .cost-detail-body {
+            padding: 15px;
+            display: none;
+        }
+        
+        .cost-detail-body.active {
+            display: block;
+        }
+        
+        .cost-detail-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .cost-detail-item:last-child {
+            border-bottom: none;
+        }
+        
+        .cost-detail-formula {
+            background-color: #f8f9fa;
+            padding: 10px;
+            border-radius: 4px;
+            margin-top: 10px;
+            font-family: monospace;
+            color: #333;
+        }
+        
+        /* Industry-specific panels */
+        .industry-panel {
+            display: none;
+            padding: 15px;
+            background-color: #f0f7ff;
+            border-radius: 6px;
+            margin-bottom: 20px;
+        }
+        
+        .industry-panel.active {
+            display: block;
+        }
+        
+        .industry-panel h3 {
+            color: var(--primary-color);
+            margin-bottom: 10px;
+        }
+        
+        /* Batch analysis */
+        .batch-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+        }
+        
+        .batch-table th, .batch-table td {
+            padding: 10px;
+            border: 1px solid var(--border-color);
+        }
+        
+        .batch-table th {
+            background-color: var(--secondary-color);
+        }
+        
+        /* Tooltips */
+        .tooltip {
+            position: relative;
+            display: inline-block;
+            margin-left: 5px;
+            cursor: pointer;
+        }
+        
+        .tooltip i {
+            color: var(--info-color);
+        }
+        
+        .tooltip .tooltip-text {
+            visibility: hidden;
+            width: 200px;
+            background-color: #333;
+            color: #fff;
+            text-align: center;
+            border-radius: 6px;
+            padding: 5px;
+            position: absolute;
+            z-index: 1;
+            bottom: 125%;
+            left: 50%;
+            transform: translateX(-50%);
+            opacity: 0;
+            transition: opacity 0.3s;
+            font-size: 14px;
+            pointer-events: none;
+        }
+        
+        .tooltip:hover .tooltip-text {
+            visibility: visible;
+            opacity: 1;
+        }
+        
+        /* Responsive design */
+        @media (max-width: 768px) {
+            .steps-container {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .steps-container::after {
+                display: none;
+            }
+            
+            .step {
+                display: flex;
+                align-items: center;
+                margin-bottom: 10px;
+            }
+            
+            .step-circle {
+                margin: 0 10px 0 0;
+            }
+            
+            .material-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .info-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .form-row {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .download-options {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1>DMLS 3D Printing Quote Calculator</h1>
+        </div>
+    </header>
+    
+    <div class="container">
+        <div class="steps-container">
+            <div class="step active" id="step-indicator-1">
+                <div class="step-circle">1</div>
+                <div class="step-label">Project Info</div>
+            </div>
+            <div class="step" id="step-indicator-2">
+                <div class="step-circle">2</div>
+                <div class="step-label">Model Upload</div>
+            </div>
+            <div class="step" id="step-indicator-3">
+                <div class="step-circle">3</div>
+                <div class="step-label">Material Selection</div>
+            </div>
+            <div class="step" id="step-indicator-4">
+                <div class="step-circle">4</div>
+                <div class="step-label">Process Parameters</div>
+            </div>
+            <div class="step" id="step-indicator-5">
+                <div class="step-circle">5</div>
+                <div class="step-label">Quote</div>
+            </div>
+        </div>
+        
+        <!-- Step 1: Project Information -->
+        <div class="form-section active" id="step-1">
+            <div class="card">
+                <h2>Project Information</h2>
+                <div class="form-row">
+                    <div class="form-col">
+                        <div class="form-group">
+                            <label for="project-name">Project Name</label>
+                            <input type="text" id="project-name" required placeholder="Enter project name">
+                        </div>
+                    </div>
+                    <div class="form-col">
+                        <div class="form-group">
+                            <label for="required-date">Required Delivery Date</label>
+                            <input type="date" id="required-date" required>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-col">
+                        <div class="form-group">
+                            <label for="quantity">Production Quantity 
+                                <span class="tooltip">
+                                    <i class="fas fa-info-circle"></i>
+                                    <span class="tooltip-text">Batch production can significantly reduce per-unit costs</span>
+                                </span>
+                            </label>
+                            <input type="number" id="quantity" min="1" required placeholder="Enter exact quantity" value="1">
+                            <small style="display: block; margin-top: 5px; color: #666;">
+                                Batch size guide: 1=Single part, 2-10=Small batch, 11-50=Medium batch, 50+=Large production
+                            </small>
+                        </div>
+                    </div>
+                    <div class="form-col">
+                        <div class="form-group">
+                            <label for="industry">Industry Sector</label>
+                            <select id="industry" required>
+                                <option value="">Select industry</option>
+                                <option value="aerospace">Aerospace</option>
+                                <option value="medical">Medical & Dental</option>
+                                <option value="automotive">Automotive</option>
+                                <option value="jewelry">Jewelry & Luxury</option>
+                                <option value="industrial">Industrial Components</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="industry-panel" id="aerospace-panel">
+                    <h3>Aerospace Certification Requirements</h3>
+                    <div class="checkbox-group">
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="cert-as9100" name="certification" value="as9100">
+                            <label for="cert-as9100">AS9100 (adds 10-15% to costs)</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="cert-material-traceability" name="certification" value="material-traceability">
+                            <label for="cert-material-traceability">Material Traceability (adds 5-10%)</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="cert-nadcap" name="certification" value="nadcap">
+                            <label for="cert-nadcap">NADCAP Accreditation (adds 15-20%)</label>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="industry-panel" id="medical-panel">
+                    <h3>Medical Certification Requirements</h3>
+                    <div class="checkbox-group">
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="cert-iso13485" name="certification" value="iso13485">
+                            <label for="cert-iso13485">ISO 13485 (adds 15-20% to costs)</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="cert-biocompatibility" name="certification" value="biocompatibility">
+                            <label for="cert-biocompatibility">Biocompatibility Testing (adds 8-15%)</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="cert-sterilization" name="certification" value="sterilization">
+                            <label for="cert-sterilization">Sterilization Validation (adds 5-8%)</label>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="industry-panel" id="jewelry-panel">
+                    <h3>Jewelry Requirements</h3>
+                    <div class="checkbox-group">
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="cert-hallmarking" name="certification" value="hallmarking">
+                            <label for="cert-hallmarking">Hallmarking (adds 2-4%)</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="cert-alloy-customization" name="certification" value="alloy-customization">
+                            <label for="cert-alloy-customization">Alloy Customization (adds 5-10%)</label>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label>General Certification Requirements</label>
+                    <div class="checkbox-group">
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="cert-none" name="certification" value="none" checked>
+                            <label for="cert-none">None</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="cert-iso9001" name="certification" value="iso9001">
+                            <label for="cert-iso9001">ISO 9001</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="cert-material" name="certification" value="material-cert">
+                            <label for="cert-material">Material Certification</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="cert-inspection" name="certification" value="inspection">
+                            <label for="cert-inspection">Full Inspection Report</label>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="part-function">Part Function</label>
+                    <textarea id="part-function" rows="3" placeholder="Describe the main function of the part..."></textarea>
+                </div>
+                
+                <div class="navigation-buttons">
+                    <div></div> <!-- Empty div for flex spacing -->
+                    <button class="btn" id="step1-next">Next</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Step 2: Upload Model -->
+        <div class="form-section" id="step-2">
+            <div class="card">
+                <h2>Upload 3D Model</h2>
+                <div class="file-upload-container">
+                    <div class="upload-icon"><i class="fas fa-cloud-upload-alt"></i></div>
+                    <h3>Drag & Drop your STL file here</h3>
+                    <p>or click to browse files</p>
+                    <input type="file" id="model-file" accept=".stl">
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-col">
+                        <div class="form-group">
+                            <label for="manual-volume">Manual Volume Input (cm³) 
+                                <span class="tooltip">
+                                    <i class="fas fa-info-circle"></i>
+                                    <span class="tooltip-text">If you know your part volume, enter it here</span>
+                                </span>
+                            </label>
+                            <input type="number" id="manual-volume" min="0" step="0.01" placeholder="Enter part volume if known">
+                        </div>
+                    </div>
+                    <div class="form-col">
+                        <div class="form-group">
+                            <label for="manual-dimensions">Manual Dimensions (mm) 
+                                <span class="tooltip">
+                                    <i class="fas fa-info-circle"></i>
+                                    <span class="tooltip-text">Format: X x Y x Z</span>
+                                </span>
+                            </label>
+                            <input type="text" id="manual-dimensions" placeholder="e.g., 100 x 50 x 25">
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="model-info" class="model-info">
+                    <h3>Model Analysis</h3>
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <strong>Volume:</strong> <span id="part-volume">-</span> cm³
+                        </div>
+                        <div class="info-item">
+                            <strong>Surface Area:</strong> <span id="surface-area">-</span> cm²
+                        </div>
+                        <div class="info-item">
+                            <strong>Dimensions:</strong> <span id="dimensions">-</span>
+                        </div>
+                        <div class="info-item">
+                            <strong>Build Height:</strong> <span id="build-height">-</span> mm
+                        </div>
+                        <div class="info-item">
+                            <strong>Est. Support Volume:</strong> <span id="support-volume">-</span> cm³
+                        </div>
+                        <div class="info-item">
+                            <strong>Complexity Score:</strong> <span id="complexity-score">-</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="model-viewer-container">
+                    <div class="loading-indicator" id="loading-indicator">
+                        <div class="spinner"></div>
+                        <p id="loading-text">Upload a model to view it here</p>
+                    </div>
+                </div>
+                
+                <div class="navigation-buttons">
+                    <button class="btn btn-secondary" id="step2-prev">Previous</button>
+                    <button class="btn" id="step2-next" disabled>Next</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Step 3: Material Selection -->
+        <div class="form-section" id="step-3">
+            <div class="card">
+                <h2>Material Selection</h2>
+                <div class="form-row">
+                    <div class="form-col">
+                        <div class="form-group">
+                            <label for="material-category">Material Category</label>
+                            <select id="material-category">
+                                <option value="all">All Materials</option>
+                                <option value="Stainless Steel">Stainless Steel</option>
+                                <option value="Titanium">Titanium</option>
+                                <option value="Aluminum">Aluminum</option>
+                                <option value="Nickel Superalloys">Nickel Superalloys</option>
+                                <option value="Cobalt Chrome">Cobalt Chrome</option>
+                                <option value="Tool Steels">Tool Steels</option>
+                                <option value="Precious Metals">Precious Metals</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-col">
+                        <div class="form-group">
+                            <label for="material-search">Search Materials</label>
+                            <input type="text" id="material-search" placeholder="Search by name or application...">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="material-grid" id="material-grid">
+                    <!-- Material cards will be dynamically generated here -->
+                </div>
+                
+                <div class="form-group" id="powder-recycling-options" style="display: none; margin-top: 20px;">
+                    <label>Powder Recycling Options 
+                        <span class="tooltip">
+                            <i class="fas fa-info-circle"></i>
+                            <span class="tooltip-text">Recycled powder can reduce costs but may affect quality</span>
+                        </span>
+                    </label>
+                    <div class="form-row">
+                        <div class="form-col">
+                            <div class="checkbox-item">
+                                <input type="radio" id="virgin-powder" name="powder-type" value="virgin" checked>
+                                <label for="virgin-powder">100% Virgin Powder (highest quality)</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="radio" id="mixed-powder" name="powder-type" value="mixed">
+                                <label for="mixed-powder">Mixed Powder (30% virgin, 70% recycled)</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="radio" id="recycled-powder" name="powder-type" value="recycled">
+                                <label for="recycled-powder">Maximum Recycled (for non-critical applications)</label>
+                            </div>
+                        </div>
+                        <div class="form-col">
+                            <div class="property-label">Material Properties Retention</div>
+                            <div class="property-bar">
+                                <div class="property-fill" id="properties-retention-bar" style="width: 100%;"></div>
+                            </div>
+                            <div class="property-label">Cost Savings</div>
+                            <div class="property-bar">
+                                <div class="property-fill" id="cost-savings-bar" style="width: 0%;"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="navigation-buttons">
+                    <button class="btn btn-secondary" id="step3-prev">Previous</button>
+                    <button class="btn" id="step3-next" disabled>Next</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Step 4: Process Parameters -->
+        <div class="form-section" id="step-4">
+            <div class="card">
+                <h2>Process Parameters</h2>
+                <div class="form-row">
+                    <div class="form-col">
+                        <div class="form-group">
+                            <label for="layer-thickness">Layer Thickness 
+                                <span class="tooltip">
+                                    <i class="fas fa-info-circle"></i>
+                                    <span class="tooltip-text">Thinner layers = better quality, thicker layers = lower cost</span>
+                                </span>
+                            </label>
+                            <select id="layer-thickness">
+                                <option value="0.02">20 μm (High Resolution)</option>
+                                <option value="0.03">30 μm (Standard)</option>
+                                <option value="0.05" selected>50 μm (Balanced)</option>
+                                <option value="0.06">60 μm (Fast)</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-col">
+                        <div class="form-group">
+                            <label for="build-orientation">Build Orientation 
+                                <span class="tooltip">
+                                    <i class="fas fa-info-circle"></i>
+                                    <span class="tooltip-text">Orientation affects support structures and surface quality</span>
+                                </span>
+                            </label>
+                            <select id="build-orientation">
+                                <option value="optimal">Optimal (Automatically determined)</option>
+                                <option value="vertical">Vertical (Z-axis oriented)</option>
+                                <option value="horizontal">Horizontal (XY plane oriented)</option>
+                                <option value="custom">Custom (45° angle)</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-col">
+                        <div class="form-group">
+                            <label for="support-density">Support Structure Density 
+                                <span class="tooltip">
+                                    <i class="fas fa-info-circle"></i>
+                                    <span class="tooltip-text">Support structures are required for overhanging features</span>
+                                </span>
+                            </label>
+                            <select id="support-density">
+                                <option value="low">Low (Less material, longer removal)</option>
+                                <option value="medium" selected>Medium (Balanced)</option>
+                                <option value="high">High (More stable, more material)</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-col">
+                        <div class="form-group">
+                            <label for="machine-type">Machine Type</label>
+                            <select id="machine-type">
+                                <option value="entry">Entry-Level DMLS (₹7,000-9,000/hr)</option>
+                                <option value="mid" selected>Mid-Range DMLS (₹9,000-12,000/hr)</option>
+                                <option value="production">Production DMLS (₹12,000-16,000/hr)</option>
+                                <option value="multi-laser">Multi-Laser DMLS (₹15,000-20,000/hr)</option>
+                                <option value="precious">Precious Metal DMLS (₹12,000-16,000/hr)</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label>Post-Processing Requirements 
+                        <span class="tooltip">
+                            <i class="fas fa-info-circle"></i>
+                            <span class="tooltip-text">Post-processing can account for 15-30% of total cost</span>
+                        </span>
+                    </label>
+                    <div class="checkbox-group">
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="support-removal" checked>
+                            <label for="support-removal">Support Removal</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="heat-treatment">
+                            <label for="heat-treatment">Heat Treatment</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="machining">
+                            <label for="machining">Machining</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="polishing">
+                            <label for="polishing">Surface Polishing</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="coating">
+                            <label for="coating">Surface Coating/Plating</label>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-col">
+                        <div class="form-group">
+                            <label for="quality-inspection">Quality Inspection Level</label>
+                            <select id="quality-inspection">
+                                <option value="basic">Basic (Visual inspection)</option>
+                                <option value="standard" selected>Standard (Dimensional verification)</option>
+                                <option value="comprehensive">Comprehensive (Full report + CMM)</option>
+                                <option value="advanced">Advanced (NDT + Full certification)</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-col">
+                        <div class="form-group">
+                            <label for="margin-percentage">Profit Margin (%)</label>
+                            <input type="range" id="margin-percentage" min="10" max="50" value="35">
+                            <div class="margin-display">
+                                <span id="margin-value">35%</span>
+                                <small>(Industry average: 30-40%)</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-group" id="batch-analysis-container">
+                    <h3>Batch Size Analysis</h3>
+                    <p>Producing multiple parts in a single build can significantly reduce per-unit costs:</p>
+                    <table class="batch-table">
+                        <thead>
+                            <tr>
+                                <th>Batch Size</th>
+                                <th>Cost Reduction</th>
+                                <th>Optimization Considerations</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>1 (single part)</td>
+                                <td>0% (baseline)</td>
+                                <td>Maximum design freedom</td>
+                            </tr>
+                            <tr>
+                                <td>2-5 parts</td>
+                                <td>15-30%</td>
+                                <td>Minor orientation compromises</td>
+                            </tr>
+                            <tr>
+                                <td>6-12 parts</td>
+                                <td>30-45%</td>
+                                <td>Moderate orientation compromises</td>
+                            </tr>
+                            <tr>
+                                <td>13-25 parts</td>
+                                <td>45-55%</td>
+                                <td>Significant orientation constraints</td>
+                            </tr>
+                            <tr>
+                                <td>26+ parts</td>
+                                <td>55-65%</td>
+                                <td>Highly constrained, standardized parameters</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="navigation-buttons">
+                    <button class="btn btn-secondary" id="step4-prev">Previous</button>
+                    <button class="btn" id="step4-next">Next</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Step 5: Quote Summary -->
+        <div class="form-section" id="step-5">
+            <div class="card">
+                <h2>Manufacturing Quote</h2>
+                
+                <!-- Quick Quote Summary Card -->
+                <div class="quote-card">
+                    <div class="quote-header">
+                        <h3>Your DMLS Manufacturing Quote</h3>
+                    </div>
+                    <div class="quote-amount" id="quote-amount">
+                        ₹0
+                        <small id="quote-per-part">₹0 per part</small>
+                    </div>
+                    <div class="quote-details">
+                        <p><strong>Project:</strong> <span id="quick-project-name">-</span></p>
+                        <p><strong>Material:</strong> <span id="quick-material">-</span></p>
+                        <p><strong>Quantity:</strong> <span id="quick-quantity">-</span></p>
+                        <p><strong>Estimated Lead Time:</strong> <span id="quick-lead-time">-</span> days</p>
+                        <p><strong>Profit Margin:</strong> <span id="quick-margin">-</span></p>
+                    </div>
+                    <div class="download-options">
+                        <button class="download-btn" id="download-detailed">
+                            <i class="fas fa-file-pdf"></i> Download Detailed Quote
+                        </button>
+                        <button class="download-btn download-btn-light" id="download-summary">
+                            <i class="fas fa-file-alt"></i> Download Summary
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Cost Breakdown Toggle -->
+                <div class="cost-breakdown-toggle" id="cost-breakdown-toggle">
+                    View Detailed Cost Breakdown <i class="fas fa-angle-down"></i>
+                </div>
+                
+                <!-- Detailed Cost Breakdown -->
+                <div class="cost-breakdown-detail" id="cost-breakdown-detail">
+                    <div class="cost-detail-card">
+                        <div class="cost-detail-header" onclick="toggleCostDetail(this)">
+                            Material Costs <i class="fas fa-angle-down"></i>
+                        </div>
+                        <div class="cost-detail-body">
+                            <div class="cost-detail-item">
+                                <span>Part Volume</span>
+                                <span id="detail-part-volume">0 cm³</span>
+                            </div>
+                            <div class="cost-detail-item">
+                                <span>Support Volume</span>
+                                <span id="detail-support-volume">0 cm³</span>
+                            </div>
+                            <div class="cost-detail-item">
+                                <span>Material Density</span>
+                                <span id="detail-material-density">0 g/cm³</span>
+                            </div>
+                            <div class="cost-detail-item">
+                                <span>Material Price</span>
+                                <span id="detail-material-price">₹0/kg</span>
+                            </div>
+                            <div class="cost-detail-item">
+                                <span>Waste Factor</span>
+                                <span id="detail-waste-factor">0%</span>
+                            </div>
+                            <div class="cost-detail-item">
+                                <span><strong>Total Material Cost</strong></span>
+                                <span id="detail-material-cost"><strong>₹0</strong></span>
+                            </div>
+                            <div class="cost-detail-formula">
+                                Material Cost = (Part Volume + Support Volume) × Material Density × Material Price × (1 + Waste Factor)
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="cost-detail-card">
+                        <div class="cost-detail-header" onclick="toggleCostDetail(this)">
+                            Machine Costs <i class="fas fa-angle-down"></i>
+                        </div>
+                        <div class="cost-detail-body">
+                            <div class="cost-detail-item">
+                                <span>Build Preparation Time</span>
+                                <span id="detail-prep-time">0 hours</span>
+                            </div>
+                            <div class="cost-detail-item">
+                                <span>Engineer Hourly Rate</span>
+                                <span id="detail-engineer-rate">₹0/hour</span>
+                            </div>
+                            <div class="cost-detail-item">
+                                <span>Build Time</span>
+                                <span id="detail-build-time">0 hours</span>
+                            </div>
+                            <div class="cost-detail-item">
+                                <span>Machine Hourly Rate</span>
+                                <span id="detail-machine-rate">₹0/hour</span>
+                            </div>
+                            <div class="cost-detail-item">
+                                <span>Machine Setup Cost</span>
+                                <span id="detail-machine-setup">₹0</span>
+                            </div>
+                            <div class="cost-detail-item">
+                                <span>Energy Cost</span>
+                                <span id="detail-energy-cost">₹0</span>
+                            </div>
+                            <div class="cost-detail-item">
+                                <span><strong>Total Machine Cost</strong></span>
+                                <span id="detail-machine-cost"><strong>₹0</strong></span>
+                            </div>
+                            <div class="cost-detail-formula">
+                                Machine Cost = (Build Preparation Time × Engineer Rate) + (Build Time × Machine Hourly Rate) + Machine Setup + Energy
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="cost-detail-card">
+                        <div class="cost-detail-header" onclick="toggleCostDetail(this)">
+                            Post-Processing Costs <i class="fas fa-angle-down"></i>
+                        </div>
+                        <div class="cost-detail-body">
+                            <div class="cost-detail-item">
+                                <span>Support Removal</span>
+                                <span id="detail-support-removal">₹0</span>
+                            </div>
+                            <div class="cost-detail-item">
+                                <span>Heat Treatment</span>
+                                <span id="detail-heat-treatment">₹0</span>
+                            </div>
+                            <div class="cost-detail-item">
+                                <span>Surface Finishing</span>
+                                <span id="detail-surface-finishing">₹0</span>
+                            </div>
+                            <div class="cost-detail-item">
+                                <span>Quality Control</span>
+                                <span id="detail-quality-control">₹0</span>
+                            </div>
+                            <div class="cost-detail-item">
+                                <span><strong>Total Post-Processing Cost</strong></span>
+                                <span id="detail-post-processing"><strong>₹0</strong></span>
+                            </div>
+                            <div class="cost-detail-formula">
+                                Post-Processing Cost = Support Removal + Heat Treatment + Surface Finishing + Quality Control
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="cost-detail-card">
+                        <div class="cost-detail-header" onclick="toggleCostDetail(this)">
+                            Labor Costs <i class="fas fa-angle-down"></i>
+                        </div>
+                        <div class="cost-detail-body">
+                            <div class="cost-detail-item">
+                                <span>Design Optimization</span>
+                                <span id="detail-design-optimization">₹0</span>
+                            </div>
+                            <div class="cost-detail-item">
+                                <span>Production Management</span>
+                                <span id="detail-production-management">₹0</span>
+                            </div>
+                            <div class="cost-detail-item">
+                                <span><strong>Total Labor Cost</strong></span>
+                                <span id="detail-labor-cost"><strong>₹0</strong></span>
+                            </div>
+                            <div class="cost-detail-formula">
+                                Labor Cost = Design Optimization + Production Management
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="cost-detail-card">
+                        <div class="cost-detail-header" onclick="toggleCostDetail(this)">
+                            Overhead & Profit <i class="fas fa-angle-down"></i>
+                        </div>
+                        <div class="cost-detail-body">
+                            <div class="cost-detail-item">
+                                <span>Direct Costs Subtotal</span>
+                                <span id="detail-direct-subtotal">₹0</span>
+                            </div>
+                            <div class="cost-detail-item">
+                                <span>Overhead Rate</span>
+                                <span id="detail-overhead-rate">0%</span>
+                            </div>
+                            <div class="cost-detail-item">
+                                <span>Profit Margin</span>
+                                <span id="detail-profit-margin">0%</span>
+                            </div>
+                            <div class="cost-detail-item">
+                                <span><strong>Total Overhead & Profit</strong></span>
+                                <span id="detail-overhead-cost"><strong>₹0</strong></span>
+                            </div>
+                            <div class="cost-detail-formula">
+                                Overhead & Profit = (Subtotal of All Direct Costs) × Overhead Rate × (1 + Profit Margin)
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="quote-summary" id="quote-summary">
+                    <div class="project-details">
+                        <h3>Project Details</h3>
+                        <p><strong>Project Name:</strong> <span id="summary-project-name">-</span></p>
+                        <p><strong>Industry:</strong> <span id="summary-industry">-</span></p>
+                        <p><strong>Required Date:</strong> <span id="summary-required-date">-</span></p>
+                        <p><strong>Quantity:</strong> <span id="summary-quantity">-</span></p>
+                    </div>
+                    
+                    <div class="part-summary">
+                        <h3>Part Specifications</h3>
+                        <p><strong>Material:</strong> <span id="summary-material">-</span></p>
+                        <p><strong>Volume:</strong> <span id="summary-volume">-</span> cm³</p>
+                        <p><strong>Support Volume:</strong> <span id="summary-support-volume">-</span> cm³</p>
+                        <p><strong>Dimensions:</strong> <span id="summary-dimensions">-</span></p>
+                        <p><strong>Layer Thickness:</strong> <span id="summary-layer-thickness">-</span> mm</p>
+                        <p><strong>Estimated Build Time:</strong> <span id="summary-build-time">-</span> hours</p>
+                    </div>
+                    
+                    <div class="cost-breakdown">
+                        <h3>Quote Breakdown</h3>
+                        <table class="cost-table">
+                            <thead>
+                                <tr>
+                                    <th>Quote Component</th>
+                                    <th>Amount (₹)</th>
+                                    <th>Percentage</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Material Cost</td>
+                                    <td class="number" id="material-cost">-</td>
+                                    <td class="number" id="material-cost-percentage">-</td>
+                                </tr>
+                                <tr>
+                                    <td>Machine Cost</td>
+                                    <td class="number" id="machine-cost">-</td>
+                                    <td class="number" id="machine-cost-percentage">-</td>
+                                </tr>
+                                <tr>
+                                    <td>Post-Processing Cost</td>
+                                    <td class="number" id="post-processing-cost">-</td>
+                                    <td class="number" id="post-processing-cost-percentage">-</td>
+                                </tr>
+                                <tr>
+                                    <td>Labor Cost</td>
+                                    <td class="number" id="labor-cost">-</td>
+                                    <td class="number" id="labor-cost-percentage">-</td>
+                                </tr>
+                                <tr>
+                                    <td>Overhead & Profit</td>
+                                    <td class="number" id="overhead-cost">-</td>
+                                    <td class="number" id="overhead-cost-percentage">-</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Total Quote</strong></td>
+                                    <td class="number" id="total-cost"><strong>-</strong></td>
+                                    <td class="number">100%</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div class="optimization-tips">
+                        <h3>Cost Optimization Suggestions</h3>
+                        <ul id="optimization-suggestions">
+                            <!-- Will be populated dynamically -->
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="navigation-buttons">
+                    <button class="btn btn-secondary" id="step5-prev">Previous</button>
+                    <button class="btn" id="restart-calculator">New Quote</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Required external scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    
+    <script>
+        // Material database - Updated from the comprehensive cost analysis document
+        const materials = [
+            {
+                id: 1,
+                name: "316L Stainless Steel",
+                category: "Stainless Steel",
+                price: 7000, // Price per kg in INR for virgin powder
+                recycledPrice: 4900, // 70% of virgin price
+                wasteFactor: 0.08, // Average of 0.06-0.10
+                density: 8.00, // g/cm³
+                description: "Excellent corrosion resistance, good for medical and food applications",
+                applications: "Medical devices, marine equipment, food processing equipment"
+            },
+            {
+                id: 2,
+                name: "17-4 PH Stainless Steel",
+                category: "Stainless Steel",
+                price: 8250, // Average of 7,000-9,500
+                recycledPrice: 5775, // 70% of virgin price
+                wasteFactor: 0.09, // Average of 0.07-0.11
+                density: 7.75, // g/cm³
+                description: "High-strength precipitation hardening stainless steel",
+                applications: "Aerospace components, tooling, surgical instruments"
+            },
+            {
+                id: 3,
+                name: "Ti6Al4V (Grade 5)",
+                category: "Titanium",
+                price: 17500, // Based on document
+                recycledPrice: 12250, // 70% of virgin price
+                wasteFactor: 0.10, // Average of 0.08-0.12
+                density: 4.43, // g/cm³
+                description: "High strength-to-weight ratio, biocompatible",
+                applications: "Aerospace components, medical implants, high-performance parts"
+            },
+            {
+                id: 4,
+                name: "Ti6Al4V ELI",
+                category: "Titanium",
+                price: 20000, // Average of 18,000-22,000
+                recycledPrice: 14000, // 70% of virgin price
+                wasteFactor: 0.10, // Average of 0.08-0.12
+                density: 4.43, // g/cm³
+                description: "Extra Low Interstitial version with high purity for medical applications",
+                applications: "Medical implants, critical aerospace components"
+            },
+            {
+                id: 5,
+                name: "AlSi10Mg",
+                category: "Aluminum",
+                price: 6000, // Based on document
+                recycledPrice: 4200, // 70% of virgin price
+                wasteFactor: 0.065, // Average of 0.05-0.08
+                density: 2.67, // g/cm³
+                description: "Lightweight with good thermal properties",
+                applications: "Automotive, aerospace, heat exchangers, lightweight structures"
+            },
+            {
+                id: 6,
+                name: "Scalmalloy",
+                category: "Aluminum",
+                price: 30000, // Average of 25,000-35,000
+                recycledPrice: 21000, // 70% of virgin price
+                wasteFactor: 0.10, // Average of 0.08-0.12
+                density: 2.7, // g/cm³
+                description: "High-performance aluminum-magnesium-scandium alloy",
+                applications: "High-performance aerospace, F1 racing components"
+            },
+            {
+                id: 7,
+                name: "Inconel 718",
+                category: "Nickel Superalloys",
+                price: 14500, // Based on document
+                recycledPrice: 10150, // 70% of virgin price
+                wasteFactor: 0.085, // Average of 0.07-0.10
+                density: 8.19, // g/cm³
+                description: "High temperature resistance, excellent mechanical properties",
+                applications: "Gas turbines, aerospace engines, high-temperature applications"
+            },
+            {
+                id: 8,
+                name: "Inconel 625",
+                category: "Nickel Superalloys",
+                price: 13500, // Average of 12,000-15,000
+                recycledPrice: 9450, // 70% of virgin price
+                wasteFactor: 0.085, // Average of 0.07-0.10
+                density: 8.44, // g/cm³
+                description: "Outstanding corrosion resistance and high-temperature strength",
+                applications: "Chemical processing, marine applications, aerospace components"
+            },
+            {
+                id: 9,
+                name: "CoCr (ASTM F75)",
+                category: "Cobalt Chrome",
+                price: 12000, // Based on document
+                recycledPrice: 8400, // 70% of virgin price
+                wasteFactor: 0.09, // Average of 0.07-0.11
+                density: 8.30, // g/cm³
+                description: "Wear-resistant, biocompatible",
+                applications: "Medical implants, dental devices, high-wear components"
+            },
+            {
+                id: 10,
+                name: "Maraging Steel",
+                category: "Tool Steels",
+                price: 9500, // Based on document
+                recycledPrice: 6650, // 70% of virgin price
+                wasteFactor: 0.075, // Average of 0.06-0.09
+                density: 8.10, // g/cm³
+                description: "Ultra-high-strength steel with good hardness",
+                applications: "Tooling, molds, high-strength mechanical parts"
+            },
+            {
+                id: 11,
+                name: "H13 Tool Steel",
+                category: "Tool Steels",
+                price: 8500, // Average of 7,000-10,000
+                recycledPrice: 5950, // 70% of virgin price
+                wasteFactor: 0.075, // Average of 0.06-0.09
+                density: 7.80, // g/cm³
+                description: "Hot work tool steel with good wear resistance",
+                applications: "Hot work tools, dies, molds, extrusion tooling"
+            },
+            {
+                id: 12,
+                name: "18K Gold",
+                category: "Precious Metals",
+                price: 275000, // Based on document
+                recycledPrice: 275000, // 100% recovery for precious metals
+                wasteFactor: 0.02, // Average of 0.01-0.03
+                density: 15.50, // g/cm³
+                description: "Jewelry-grade gold alloy",
+                applications: "Luxury jewelry, high-end watches, decorative items"
+            },
+            {
+                id: 13,
+                name: "Sterling Silver",
+                category: "Precious Metals",
+                price: 80000, // Based on document
+                recycledPrice: 80000, // 100% recovery for precious metals
+                wasteFactor: 0.02, // Average of 0.01-0.03
+                density: 10.30, // g/cm³
+                description: "92.5% silver alloy with excellent finishing properties",
+                applications: "Jewelry, tableware, decorative items, specialized components"
+            }
+        ];
+
+        // Machine database
+        const machines = {
+            "entry": {
+                name: "Entry-Level DMLS",
+                purchaseCost: 10000000, // ₹1 crore
+                depreciationYears: 5,
+                annualOperationHours: 3000,
+                hourlyRate: 8000, // Average of 7,000-9,000
+                maintenancePercent: 0.11, // Average of 10-12%
+                setupCost: 10000 // Chamber + plate + calibration
+            },
+            "mid": {
+                name: "Mid-Range DMLS",
+                purchaseCost: 20000000, // ₹2 crore
+                depreciationYears: 6,
+                annualOperationHours: 4000,
+                hourlyRate: 10500, // Average of 9,000-12,000
+                maintenancePercent: 0.09, // Average of 8-10%
+                setupCost: 12000
+            },
+            "production": {
+                name: "Production DMLS",
+                purchaseCost: 35000000, // ₹3.5 crore
+                depreciationYears: 7,
+                annualOperationHours: 5000,
+                hourlyRate: 14000, // Average of 12,000-16,000
+                maintenancePercent: 0.09, // Average of 8-10%
+                setupCost: 15000
+            },
+            "multi-laser": {
+                name: "Multi-Laser DMLS",
+                purchaseCost: 45000000, // ₹4.5 crore
+                depreciationYears: 7,
+                annualOperationHours: 5000,
+                hourlyRate: 17500, // Average of 15,000-20,000
+                maintenancePercent: 0.11, // Average of 10-12%
+                setupCost: 18000
+            },
+            "precious": {
+                name: "Precious Metal DMLS",
+                purchaseCost: 15000000, // ₹1.5 crore
+                depreciationYears: 5,
+                annualOperationHours: 2500,
+                hourlyRate: 14000, // Average of 12,000-16,000
+                maintenancePercent: 0.11, // Average of 10-12%
+                setupCost: 20000
+            }
+        };
+
+        // Post-processing costs by method
+        const postProcessingCosts = {
+            supportRemoval: {
+                baseTime: {
+                    "low": 0.5, // hours
+                    "medium": 1.0,
+                    "high": 1.5
+                },
+                laborRate: 1000 // ₹/hour
+            },
+            heatTreatment: {
+                baseCost: 9000, // ₹ per batch
+                volumeFactor: 300, // ₹ per cm³
+                setupCost: 3000 // ₹
+            },
+            surfaceFinishing: {
+                beadBlasting: {
+                    baseCost: 4000,
+                    costPerCm2: 10
+                },
+                polishing: {
+                    baseCost: 7500,
+                    costPerCm2: 65 // Average of 30-100
+                },
+                machining: {
+                    baseCost: 11500, // Average of 8,000-15,000
+                    costPerCm2: 125 // Average of 50-200
+                },
+                coating: {
+                    baseCost: 14000, // Average of 8,000-20,000
+                    costPerCm2: 50 // Average of 30-70
+                }
+            },
+            qualityControl: {
+                visual: {
+                    cost: 2000 // Average of 1,000-3,000
+                },
+                dimensional: {
+                    basic: 3000,
+                    standard: 8000, // Average of 5,000-10,000
+                    comprehensive: 15000, // Average of 10,000-20,000
+                    advanced: 25000
+                },
+                documentation: {
+                    basic: 3000,
+                    standard: 8000,
+                    comprehensive: 15000,
+                    advanced: 25000
+                }
+            }
+        };
+
+        // Labor rates
+        const laborRates = {
+            technician: 650, // Average of 500-800
+            skilled: 1000, // Average of 800-1,200
+            engineer: 2000, // Average of 1,500-2,500
+            senior: 3250 // Average of 2,500-4,000
+        };
+
+        // Overhead rates by industry
+        const overheadRates = {
+            "aerospace": 0.28, // Higher due to certification requirements
+            "medical": 0.30, // Highest due to regulatory compliance
+            "automotive": 0.25,
+            "jewelry": 0.22, // Lower due to different business model
+            "industrial": 0.25,
+            "other": 0.25 // Default
+        };
+
+        // Application state
+        let currentStep = 1;
+        let selectedMaterial = null;
+        let modelData = null;
+        let scene, camera, renderer, model;
+        let powderType = "virgin"; // Default is virgin powder
+        
+        // Calculation parameters
+        let calculationParams = {
+            partVolume: 0,
+            supportVolume: 0,
+            buildTime: 0,
+            materialCost: 0,
+            machineCost: 0,
+            postProcessingCost: 0,
+            laborCost: 0,
+            overheadCost: 0,
+            totalCost: 0,
+            surfaceArea: 0,
+            complexity: 0
+        };
+
+        // DOM elements
+        document.addEventListener('DOMContentLoaded', function() {
+            try {
+                // Set current date as minimum for required date
+                const today = new Date();
+                const dateStr = today.toISOString().split('T')[0];
+                const requiredDateField = document.getElementById('required-date');
+                if (requiredDateField) requiredDateField.min = dateStr;
+                
+                // Initialize form navigation
+                setupFormNavigation();
+                
+                // Initialize material selection
+                populateMaterialGrid();
+                
+                // Initialize 3D viewer
+                initModelViewer();
+                
+                // Set up event listeners
+                const fileUploadElement = document.getElementById('model-file');
+                if (fileUploadElement) {
+                    fileUploadElement.addEventListener('change', handleFileUpload);
+                }
+                
+                const manualVolumeElement = document.getElementById('manual-volume');
+                if (manualVolumeElement) {
+                    manualVolumeElement.addEventListener('change', handleManualVolume);
+                }
+                
+                const manualDimensionsElement = document.getElementById('manual-dimensions');
+                if (manualDimensionsElement) {
+                    manualDimensionsElement.addEventListener('change', handleManualDimensions);
+                }
+                
+                const materialCategoryElement = document.getElementById('material-category');
+                if (materialCategoryElement) {
+                    materialCategoryElement.addEventListener('change', filterMaterials);
+                }
+                
+                const materialSearchElement = document.getElementById('material-search');
+                if (materialSearchElement) {
+                    materialSearchElement.addEventListener('input', filterMaterials);
+                }
+                
+                // Industry selection events
+                const industrySelect = document.getElementById('industry');
+                if (industrySelect) {
+                    industrySelect.addEventListener('change', handleIndustryChange);
+                }
+                
+                // Powder recycling options
+                const powderOptions = document.querySelectorAll('input[name="powder-type"]');
+                powderOptions.forEach(option => {
+                    option.addEventListener('change', updatePowderRecyclingVisuals);
+                });
+                
+                // Profit margin slider
+                const marginPercentageElement = document.getElementById('margin-percentage');
+                if (marginPercentageElement) {
+                    marginPercentageElement.addEventListener('input', updateMarginDisplay);
+                    // Initialize margin display
+                    updateMarginDisplay();
+                }
+                
+                // Add event listeners to all process parameter inputs
+                const paramInputs = document.querySelectorAll('#step-4 select, #step-4 input[type="checkbox"], #step-4 input[type="range"]');
+                paramInputs.forEach(input => {
+                    input.addEventListener('change', updateCalculations);
+                });
+                
+                // Cost breakdown toggle
+                const breakdownToggle = document.getElementById('cost-breakdown-toggle');
+                if (breakdownToggle) {
+                    breakdownToggle.addEventListener('click', toggleCostBreakdown);
+                }
+                
+                // Initialize download buttons
+                const downloadDetailedBtn = document.getElementById('download-detailed');
+                if (downloadDetailedBtn) {
+                    downloadDetailedBtn.addEventListener('click', () => generatePDF('detailed'));
+                }
+                
+                const downloadSummaryBtn = document.getElementById('download-summary');
+                if (downloadSummaryBtn) {
+                    downloadSummaryBtn.addEventListener('click', () => generatePDF('summary'));
+                }
+                
+                // Restart calculator button
+                const restartBtn = document.getElementById('restart-calculator');
+                if (restartBtn) {
+                    restartBtn.addEventListener('click', restartCalculator);
+                }
+                
+                // Set up form navigation
+                document.getElementById('step1-next').addEventListener('click', () => {
+                    if (validateStep(1)) nextStep(1);
+                });
+                
+                document.getElementById('step2-prev').addEventListener('click', () => prevStep(2));
+                document.getElementById('step2-next').addEventListener('click', () => {
+                    if (validateStep(2)) nextStep(2);
+                });
+                
+                document.getElementById('step3-prev').addEventListener('click', () => prevStep(3));
+                document.getElementById('step3-next').addEventListener('click', () => {
+                    if (validateStep(3)) nextStep(3);
+                });
+                
+                document.getElementById('step4-prev').addEventListener('click', () => prevStep(4));
+                document.getElementById('step4-next').addEventListener('click', () => {
+                    if (validateStep(4)) nextStep(4);
+                });
+                
+                document.getElementById('step5-prev').addEventListener('click', () => prevStep(5));
+            } catch (error) {
+                console.error('Error in initialization:', error);
+            }
+        });
+
+        // Navigation functions
+        function setupFormNavigation() {
+            // This function is now handled in the DOMContentLoaded event
+        }
+
+        function nextStep(currentStepNum) {
+            // Hide current step
+            document.getElementById(`step-${currentStepNum}`).classList.remove('active');
+            document.getElementById(`step-indicator-${currentStepNum}`).classList.remove('active');
+            document.getElementById(`step-indicator-${currentStepNum}`).classList.add('completed');
+            
+            // Show next step
+            currentStep = currentStepNum + 1;
+            document.getElementById(`step-${currentStep}`).classList.add('active');
+            document.getElementById(`step-indicator-${currentStep}`).classList.add('active');
+            
+            // Special actions when entering certain steps
+            if (currentStep === 3) {
+                // Update powder recycling options visibility based on selected material
+                updatePowderRecyclingOptions();
+            } else if (currentStep === 5) {
+                // Update quote and show summary
+                updateQuoteSummary();
+                document.getElementById('quote-summary').style.display = 'block';
+            }
+        }
+
+        function prevStep(currentStepNum) {
+            // Hide current step
+            document.getElementById(`step-${currentStepNum}`).classList.remove('active');
+            document.getElementById(`step-indicator-${currentStepNum}`).classList.remove('active');
+            
+            // Show previous step
+            currentStep = currentStepNum - 1;
+            document.getElementById(`step-${currentStep}`).classList.add('active');
+            document.getElementById(`step-indicator-${currentStep}`).classList.add('active');
+            document.getElementById(`step-indicator-${currentStep}`).classList.remove('completed');
+        }
+
+        function validateStep(step) {
+            switch(step) {
+                case 1:
+                    // Validate project info
+                    const projectName = document.getElementById('project-name').value;
+                    const reqDate = document.getElementById('required-date').value;
+                    const quantity = document.getElementById('quantity').value;
+                    const industry = document.getElementById('industry').value;
+                    
+                    if (!projectName || !reqDate || !quantity || !industry) {
+                        alert('Please fill in all required fields');
+                        return false;
+                    }
+                    return true;
+                    
+                case 2:
+                    // Validate model upload or manual entry
+                    if (!modelData) {
+                        const manualVolume = document.getElementById('manual-volume').value;
+                        if (!manualVolume || manualVolume <= 0) {
+                            alert('Please upload a model or enter manual volume');
+                            return false;
+                        }
+                        
+                        // Create model data from manual entry
+                        handleManualVolume();
+                    }
+                    return true;
+                    
+                case 3:
+                    // Validate material selection
+                    if (!selectedMaterial) {
+                        alert('Please select a material');
+                        return false;
+                    }
+                    return true;
+                    
+                case 4:
+                    // All process parameters have defaults, no validation needed
+                    updateCalculations();
+                    return true;
+                    
+                default:
+                    return true;
+            }
+        }
+
+        // File upload and model handling
+        function handleFileUpload(event) {
+            const file = event.target.files ? event.target.files[0] : null;
+            if (!file) return;
+            
+            // Show loading indicator
+            const loadingText = document.getElementById('loading-text');
+            if (loadingText) {
+                loadingText.textContent = 'Analyzing model...';
+            }
+            
+            const loadingIndicator = document.getElementById('loading-indicator');
+            if (loadingIndicator) {
+                loadingIndicator.style.display = 'block';
+            }
+            
+            // For demo, we'll simulate loading with random values
+            // In a real app, you would parse the STL file here
+            setTimeout(() => {
+                try {
+                    // Clear manual inputs
+                    document.getElementById('manual-volume').value = '';
+                    document.getElementById('manual-dimensions').value = '';
+                    
+                    // Generate simulated model data
+                    const volume = (Math.random() * 500 + 50).toFixed(2);
+                    const surfaceArea = (Math.random() * 1000 + 200).toFixed(2);
+                    const dimensions = `${(Math.random() * 200 + 50).toFixed(1)} x ${(Math.random() * 200 + 50).toFixed(1)} x ${(Math.random() * 200 + 50).toFixed(1)} mm`;
+                    const buildHeight = (Math.random() * 150 + 30).toFixed(1);
+                    
+                    // Calculate support volume based on complexity and orientation
+                    // In a real application, this would be more sophisticated
+                    const complexityScore = (Math.random() * 10).toFixed(1);
+                    const supportFactor = 0.2 + (parseFloat(complexityScore) / 50); // Support factor ranges from 0.2 to 0.4
+                    const supportVolume = (parseFloat(volume) * supportFactor).toFixed(2);
+                    
+                    modelData = {
+                        volume: volume,
+                        surfaceArea: surfaceArea,
+                        dimensions: dimensions,
+                        buildHeight: buildHeight,
+                        supportVolume: supportVolume,
+                        complexityScore: complexityScore
+                    };
+                    
+                    // Update model info display
+                    updateModelInfoDisplay();
+                    
+                    // Store values for calculations
+                    calculationParams.partVolume = parseFloat(modelData.volume);
+                    calculationParams.supportVolume = parseFloat(modelData.supportVolume);
+                    calculationParams.surfaceArea = parseFloat(modelData.surfaceArea);
+                    calculationParams.complexity = parseFloat(modelData.complexityScore);
+                    
+                    // Enable next button
+                    document.getElementById('step2-next').disabled = false;
+                    
+                    // Simulate rendering a 3D model
+                    renderSimulatedModel();
+                } catch (error) {
+                    console.error('Error in model processing:', error);
+                    if (loadingText) {
+                        loadingText.textContent = 'Error loading model. Please try again.';
+                    }
+                }
+            }, 1500);
+        }
+
+        function handleManualVolume() {
+            const volumeInput = document.getElementById('manual-volume').value;
+            if (!volumeInput || volumeInput <= 0) return;
+            
+            try {
+                const volume = parseFloat(volumeInput);
+                
+                // Estimate other parameters based on volume
+                const surfaceArea = (volume * 6).toFixed(2); // Rough estimate
+                const cubicDimension = Math.cbrt(volume) * 10; // Convert to mm
+                const dimensions = `${cubicDimension.toFixed(1)} x ${cubicDimension.toFixed(1)} x ${cubicDimension.toFixed(1)} mm`;
+                const buildHeight = cubicDimension.toFixed(1);
+                const complexityScore = "5.0"; // Medium complexity
+                const supportVolume = (volume * 0.3).toFixed(2); // 30% of part volume
+                
+                modelData = {
+                    volume: volume.toFixed(2),
+                    surfaceArea: surfaceArea,
+                    dimensions: dimensions,
+                    buildHeight: buildHeight,
+                    supportVolume: supportVolume,
+                    complexityScore: complexityScore
+                };
+                
+                // Update model info display
+                updateModelInfoDisplay();
+                
+                // Store values for calculations
+                calculationParams.partVolume = volume;
+                calculationParams.supportVolume = parseFloat(supportVolume);
+                calculationParams.surfaceArea = parseFloat(surfaceArea);
+                calculationParams.complexity = 5.0;
+                
+                // Enable next button
+                document.getElementById('step2-next').disabled = false;
+                
+                // Generate a simple cube for visualization
+                renderSimulatedModel();
+            } catch (error) {
+                console.error('Error in manual volume entry:', error);
+            }
+        }
+
+        function handleManualDimensions() {
+            const dimensionsInput = document.getElementById('manual-dimensions').value;
+            if (!dimensionsInput) return;
+            
+            try {
+                // Parse dimensions (expected format: X x Y x Z)
+                const dimArray = dimensionsInput.split('x').map(dim => parseFloat(dim.trim()));
+                if (dimArray.length !== 3 || dimArray.some(isNaN)) {
+                    alert('Please enter dimensions in the format: X x Y x Z');
+                    return;
+                }
+                
+                const [length, width, height] = dimArray;
+                
+                // Calculate volume in cm³ (convert from mm³)
+                const volume = (length * width * height / 1000).toFixed(2);
+                
+                // Calculate surface area
+                const surfaceArea = (2 * (length * width + length * height + width * height) / 100).toFixed(2);
+                
+                const buildHeight = height.toFixed(1);
+                const complexityScore = "5.0"; // Medium complexity
+                const supportVolume = (parseFloat(volume) * 0.3).toFixed(2); // 30% of part volume
+                
+                // Update manual volume field
+                document.getElementById('manual-volume').value = volume;
+                
+                modelData = {
+                    volume: volume,
+                    surfaceArea: surfaceArea,
+                    dimensions: dimensionsInput + " mm",
+                    buildHeight: buildHeight,
+                    supportVolume: supportVolume,
+                    complexityScore: complexityScore
+                };
+                
+                // Update model info display
+                updateModelInfoDisplay();
+                
+                // Store values for calculations
+                calculationParams.partVolume = parseFloat(volume);
+                calculationParams.supportVolume = parseFloat(supportVolume);
+                calculationParams.surfaceArea = parseFloat(surfaceArea);
+                calculationParams.complexity = 5.0;
+                
+                // Enable next button
+                document.getElementById('step2-next').disabled = false;
+                
+                // Generate a box for visualization
+                renderSimulatedModel(length/width, width/height, height/length);
+            } catch (error) {
+                console.error('Error in manual dimensions entry:', error);
+            }
+        }
+
+        function updateModelInfoDisplay() {
+            if (!modelData) return;
+            
+            // Update model info display
+            document.getElementById('part-volume').textContent = modelData.volume;
+            document.getElementById('surface-area').textContent = modelData.surfaceArea;
+            document.getElementById('dimensions').textContent = modelData.dimensions;
+            document.getElementById('build-height').textContent = modelData.buildHeight;
+            document.getElementById('support-volume').textContent = modelData.supportVolume;
+            document.getElementById('complexity-score').textContent = modelData.complexityScore;
+            
+            // Show model info
+            document.getElementById('model-info').style.display = 'block';
+        }
+
+        function initModelViewer() {
+            try {
+                // Set up a basic Three.js scene
+                const container = document.getElementById('model-viewer-container');
+                if (!container) {
+                    console.error('Model viewer container not found');
+                    return;
+                }
+                
+                // Initialize the Three.js scene
+                scene = new THREE.Scene();
+                scene.background = new THREE.Color(0xf0f0f0);
+                
+                // Camera
+                camera = new THREE.PerspectiveCamera(75, container.clientWidth / container.clientHeight, 0.1, 1000);
+                camera.position.z = 5;
+                
+                // Renderer
+                renderer = new THREE.WebGLRenderer({ antialias: true });
+                renderer.setSize(container.clientWidth, container.clientHeight);
+                
+                // Lighting
+                const ambientLight = new THREE.AmbientLight(0x404040);
+                scene.add(ambientLight);
+                
+                const directionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
+                directionalLight.position.set(1, 1, 1);
+                scene.add(directionalLight);
+                
+                // Preserve the loading indicator
+                const loadingIndicator = container.querySelector('#loading-indicator');
+                
+                // Clear the container
+                while (container.firstChild) {
+                    container.removeChild(container.firstChild);
+                }
+                
+                // Add renderer
+                container.appendChild(renderer.domElement);
+                
+                // Re-add loading indicator
+                if (loadingIndicator) {
+                    container.appendChild(loadingIndicator);
+                }
+                
+                // Handle window resize
+                window.addEventListener('resize', () => {
+                    if (camera && renderer && container) {
+                        camera.aspect = container.clientWidth / container.clientHeight;
+                        camera.updateProjectionMatrix();
+                        renderer.setSize(container.clientWidth, container.clientHeight);
+                    }
+                });
+                
+                // Render an empty scene to start
+                if (renderer && scene && camera) {
+                    renderer.render(scene, camera);
+                }
+                
+            } catch (error) {
+                console.error('Error initializing model viewer:', error);
+            }
+        }
+
+        function renderSimulatedModel(xRatio = 1, yRatio = 1, zRatio = 1) {
+            try {
+                // Check if scene and other Three.js objects are initialized
+                if (!scene || !camera || !renderer) {
+                    console.error('3D scene not properly initialized');
+                    return;
+                }
+                
+                // Remove any existing model
+                if (model) scene.remove(model);
+                
+                // Create a box geometry with the specified ratios
+                const geometry = new THREE.BoxGeometry(
+                    2 * xRatio, 
+                    2 * yRatio, 
+                    2 * zRatio
+                );
+                
+                // Create material based on selected material if available
+                let materialColor = 0x00aaff; // Default blue
+                
+                if (selectedMaterial) {
+                    // Change color based on material category
+                    switch (selectedMaterial.category) {
+                        case "Stainless Steel":
+                            materialColor = 0xcccccc; // Silver
+                            break;
+                        case "Titanium":
+                            materialColor = 0xaaaaaa; // Light gray
+                            break;
+                        case "Aluminum":
+                            materialColor = 0xdddddd; // Very light gray
+                            break;
+                        case "Nickel Superalloys":
+                            materialColor = 0x999999; // Gray
+                            break;
+                        case "Cobalt Chrome":
+                            materialColor = 0x8888aa; // Bluish gray
+                            break;
+                        case "Tool Steels":
+                            materialColor = 0x777777; // Dark gray
+                            break;
+                        case "Precious Metals":
+                            if (selectedMaterial.name.includes("Gold")) {
+                                materialColor = 0xffd700; // Gold
+                            } else if (selectedMaterial.name.includes("Silver")) {
+                                materialColor = 0xc0c0c0; // Silver
+                            }
+                            break;
+                    }
+                }
+                
+                const material = new THREE.MeshPhongMaterial({ 
+                    color: materialColor,
+                    shininess: 60
+                });
+                
+                model = new THREE.Mesh(geometry, material);
+                scene.add(model);
+                
+                // Hide loading indicator
+                const loadingIndicator = document.getElementById('loading-indicator');
+                if (loadingIndicator) {
+                    loadingIndicator.style.display = 'none';
+                }
+                
+                // Animation loop with error handling
+                let animationRunning = true;
+                
+                function animate() {
+                    if (!animationRunning) return;
+                    
+                    try {
+                        requestAnimationFrame(animate);
+                        if (model) {
+                            model.rotation.x += 0.01;
+                            model.rotation.y += 0.01;
+                        }
+                        renderer.render(scene, camera);
+                    } catch (error) {
+                        console.error('Error in animation loop:', error);
+                        animationRunning = false;
+                    }
+                }
+                
+                animate();
+            } catch (error) {
+                console.error('Error rendering model:', error);
+            }
+        }
+
+        // Material selection functions
+        function populateMaterialGrid() {
+            const grid = document.getElementById('material-grid');
+            if (!grid) return;
+            
+            grid.innerHTML = '';
+            
+            materials.forEach(material => {
+                const card = document.createElement('div');
+                card.className = 'material-card';
+                card.dataset.id = material.id;
+                
+                card.innerHTML = `
+                    <h3>${material.name}</h3>
+                    <p><strong>Category:</strong> ${material.category}</p>
+                    <p><strong>Price:</strong> ₹${material.price.toLocaleString()}/kg</p>
+                    <p><strong>Density:</strong> ${material.density} g/cm³</p>
+                    <p>${material.description}</p>
+                    <p><small><strong>Applications:</strong> ${material.applications}</small></p>
+                `;
+                
+                card.addEventListener('click', () => selectMaterial(material));
+                
+                grid.appendChild(card);
+            });
+        }
+
+        function filterMaterials() {
+            const category = document.getElementById('material-category').value;
+            const searchTerm = document.getElementById('material-search').value.toLowerCase();
+            
+            const cards = document.querySelectorAll('.material-card');
+            cards.forEach(card => {
+                const materialId = parseInt(card.dataset.id);
+                const material = materials.find(m => m.id === materialId);
+                
+                if (!material) return;
+                
+                const categoryMatch = category === 'all' || material.category === category;
+                const searchMatch = material.name.toLowerCase().includes(searchTerm) || 
+                                  material.applications.toLowerCase().includes(searchTerm) || 
+                                  material.description.toLowerCase().includes(searchTerm) ||
+                                  material.category.toLowerCase().includes(searchTerm);
+                
+                if (categoryMatch && searchMatch) {
+                    card.style.display = 'block';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        }
+
+        function selectMaterial(material) {
+            // Remove selection from all cards
+            document.querySelectorAll('.material-card').forEach(card => {
+                card.classList.remove('selected');
+            });
+            
+            // Add selection to clicked card
+            const card = document.querySelector(`.material-card[data-id="${material.id}"]`);
+            if (card) card.classList.add('selected');
+            
+            // Store selected material
+            selectedMaterial = material;
+            
+            // Enable next button
+            document.getElementById('step3-next').disabled = false;
+            
+            // Update material information in the 3D model viewer
+            if (model) {
+                // Update material color based on selection
+                let materialColor = 0x00aaff;
+                
+                switch (material.category) {
+                    case "Stainless Steel":
+                        materialColor = 0xcccccc;
+                        break;
+                    case "Titanium":
+                        materialColor = 0xaaaaaa;
+                        break;
+                    case "Aluminum":
+                        materialColor = 0xdddddd;
+                        break;
+                    case "Nickel Superalloys":
+                        materialColor = 0x999999;
+                        break;
+                    case "Cobalt Chrome":
+                        materialColor = 0x8888aa;
+                        break;
+                    case "Tool Steels":
+                        materialColor = 0x777777;
+                        break;
+                    case "Precious Metals":
+                        if (material.name.includes("Gold")) {
+                            materialColor = 0xffd700;
+                        } else if (material.name.includes("Silver")) {
+                            materialColor = 0xc0c0c0;
+                        }
+                        break;
+                }
+                
+                model.material.color.setHex(materialColor);
+            }
+            
+            // Show powder recycling options for relevant materials
+            updatePowderRecyclingOptions();
+            
+            // Update calculations
+            updateCalculations();
+        }
+        
+        function updatePowderRecyclingOptions() {
+            const container = document.getElementById('powder-recycling-options');
+            
+            if (!selectedMaterial) {
+                if (container) container.style.display = 'none';
+                return;
+            }
+            
+            // Only show recycling options for non-precious metals
+            if (selectedMaterial.category !== "Precious Metals") {
+                if (container) container.style.display = 'block';
+            } else {
+                if (container) container.style.display = 'none';
+            }
+            
+            // Reset to virgin powder
+            document.getElementById('virgin-powder').checked = true;
+            updatePowderRecyclingVisuals();
+        }
+        
+        function updatePowderRecyclingVisuals() {
+            const selectedPowder = document.querySelector('input[name="powder-type"]:checked').value;
+            powderType = selectedPowder;
+            
+            const propertiesBar = document.getElementById('properties-retention-bar');
+            const costSavingsBar = document.getElementById('cost-savings-bar');
+            
+            switch (selectedPowder) {
+                case 'virgin':
+                    if (propertiesBar) propertiesBar.style.width = '100%';
+                    if (costSavingsBar) costSavingsBar.style.width = '0%';
+                    break;
+                case 'mixed':
+                    if (propertiesBar) propertiesBar.style.width = '90%';
+                    if (costSavingsBar) costSavingsBar.style.width = '20%';
+                    break;
+                case 'recycled':
+                    if (propertiesBar) propertiesBar.style.width = '75%';
+                    if (costSavingsBar) costSavingsBar.style.width = '30%';
+                    break;
+            }
+            
+            // Update calculations
+            updateCalculations();
+        }
+
+        // Industry specific functions
+        function handleIndustryChange() {
+            const industry = document.getElementById('industry').value;
+            
+            // Hide all industry panels
+            document.querySelectorAll('.industry-panel').forEach(panel => {
+                panel.classList.remove('active');
+            });
+            
+            // Show relevant industry panel
+            const panel = document.getElementById(`${industry}-panel`);
+            if (panel) panel.classList.add('active');
+            
+            // Reset certification checkbox
+            document.getElementById('cert-none').checked = true;
+            document.querySelectorAll('input[name="certification"]').forEach(checkbox => {
+                if (checkbox.id !== 'cert-none') {
+                    checkbox.checked = false;
+                }
+            });
+        }
+
+        // Quote calculation functions
+        function updateMarginDisplay() {
+            try {
+                const marginInput = document.getElementById('margin-percentage');
+                const marginDisplay = document.getElementById('margin-value');
+                
+                if (marginInput && marginDisplay) {
+                    const margin = marginInput.value;
+                    marginDisplay.textContent = `${margin}%`;
+                    updateCalculations();
+                }
+            } catch (error) {
+                console.error('Error updating margin display:', error);
+            }
+        }
+
+        function updateCalculations() {
+            // Skip if no model data or material is selected
+            if (!modelData || !selectedMaterial) return;
+            
+            try {
+                // Get parameters from form
+                const layerThickness = parseFloat(document.getElementById('layer-thickness').value);
+                const buildOrientation = document.getElementById('build-orientation').value;
+                const supportDensity = document.getElementById('support-density').value;
+                const machineType = document.getElementById('machine-type').value;
+                const margin = parseInt(document.getElementById('margin-percentage').value) / 100;
+                
+                // Get post-processing options
+                const supportRemoval = document.getElementById('support-removal').checked;
+                const heatTreatment = document.getElementById('heat-treatment').checked;
+                const machining = document.getElementById('machining').checked;
+                const polishing = document.getElementById('polishing').checked;
+                const coating = document.getElementById('coating').checked;
+                
+                // Get quality inspection level
+                const qualityInspection = document.getElementById('quality-inspection').value;
+                
+                // Get quantity
+                const quantity = parseInt(document.getElementById('quantity').value);
+                
+                // Get industry
+                const industry = document.getElementById('industry').value;
+                
+                // Calculate material cost
+                calculateMaterialCost(quantity);
+                
+                // Calculate machine cost
+                calculateMachineCost(layerThickness, buildOrientation, machineType, quantity);
+                
+                // Calculate post-processing cost
+                calculatePostProcessingCost(supportRemoval, heatTreatment, machining, polishing, coating, qualityInspection, supportDensity, quantity);
+                
+                // Calculate labor cost
+                calculateLaborCost(quantity);
+                
+                // Calculate overhead and profit
+                calculateOverheadCost(industry, margin, quantity);
+                
+                // Calculate total cost
+                calculateTotalCost(quantity);
+            } catch (error) {
+                console.error('Error in calculations:', error);
+            }
+        }
+        
+        function calculateMaterialCost(quantity) {
+            // Implementation of the material cost formula from the documentation
+            // Material Cost = (Part Volume + Support Volume) × Material Density × Material Price × (1 + Waste Factor)
+            
+            let partVolume = calculationParams.partVolume;
+            let supportVolume = calculationParams.supportVolume;
+            let materialDensity = selectedMaterial.density;
+            
+            // Apply powder recycling discount if applicable
+            let materialPrice = selectedMaterial.price;
+            if (powderType === 'mixed' && selectedMaterial.category !== "Precious Metals") {
+                materialPrice = selectedMaterial.price * 0.85; // 15% discount for mixed powder
+            } else if (powderType === 'recycled' && selectedMaterial.category !== "Precious Metals") {
+                materialPrice = selectedMaterial.recycledPrice;
+            }
+            
+            let wasteFactor = selectedMaterial.wasteFactor;
+            
+            // Convert volume from cm³ to m³, density from g/cm³ to kg/m³, and price from ₹/kg to ₹/kg
+            // Density is already in g/cm³, so we convert it to kg/cm³ by dividing by 1000
+            // Then multiply by part volume in cm³ to get kg
+            const totalWeight = (partVolume + supportVolume) * (materialDensity / 1000);
+            
+            const materialCost = totalWeight * materialPrice * (1 + wasteFactor);
+            
+            // Apply batch discount based on quantity
+            let batchDiscount = 1.0;
+            if (quantity > 50) {
+                batchDiscount = 0.75; // 25% discount for large batches
+            } else if (quantity > 25) {
+                batchDiscount = 0.80; // 20% discount
+            } else if (quantity > 12) {
+                batchDiscount = 0.85; // 15% discount
+            } else if (quantity > 5) {
+                batchDiscount = 0.90; // 10% discount
+            } else if (quantity > 1) {
+                batchDiscount = 0.95; // 5% discount
+            }
+            
+            calculationParams.materialCost = materialCost * batchDiscount;
+            
+            return calculationParams.materialCost;
+        }
+        
+        function calculateMachineCost(layerThickness, buildOrientation, machineType, quantity) {
+            // Implementation of the machine cost formula from the documentation
+            // Machine Cost = (Build Preparation Time × Engineer Rate) + (Build Time × Machine Hourly Rate) + Machine Setup + Energy
+            
+            const machine = machines[machineType];
+            
+            // 1. Calculate build preparation time
+            let orientationTime, supportGenTime, arrangementTime, parameterTime;
+            
+            switch(buildOrientation) {
+                case 'optimal':
+                    orientationTime = 1.5; // hours
+                    break;
+                case 'vertical':
+                    orientationTime = 0.5;
+                    break;
+                case 'horizontal':
+                    orientationTime = 0.5;
+                    break;
+                case 'custom':
+                    orientationTime = 1.0;
+                    break;
+                default:
+                    orientationTime = 1.0;
+            }
+            
+            // Support generation time based on complexity
+            const complexity = parseFloat(modelData.complexityScore);
+            if (complexity < 3) {
+                supportGenTime = 0.5;
+            } else if (complexity < 7) {
+                supportGenTime = 1.0;
+            } else {
+                supportGenTime = 2.0;
+            }
+            
+            // Arrangement time based on quantity
+            if (quantity === 1) {
+                arrangementTime = 0.2;
+            } else if (quantity <= 5) {
+                arrangementTime = 0.5;
+            } else if (quantity <= 20) {
+                arrangementTime = 0.8;
+            } else {
+                arrangementTime = 1.0;
+            }
+            
+            // Parameter selection time
+            parameterTime = 0.3;
+            
+            const buildPrepTime = orientationTime + supportGenTime + arrangementTime + parameterTime;
+            
+            // 2. Calculate build time
+            // Build Time = Base Setup Time + [(Part Height ÷ Layer Thickness) × Layer Time × (1 + Complexity Factor)]
+            
+            const baseSetupTime = 1.5; // hours
+            const partHeight = parseFloat(modelData.buildHeight); // mm
+            const layers = partHeight / (layerThickness * 1000); // Convert layer thickness from m to mm
+            
+            // Calculate layer time based on cross-sectional area and machine type
+            // Simplified approach for the calculator
+            const avgLayerArea = calculationParams.surfaceArea / 2; // cm²
+            const avgLayerTime = 30; // seconds, base value
+            
+            // Adjust layer time based on machine type
+            let layerTimeMultiplier;
+            switch(machineType) {
+                case 'entry':
+                    layerTimeMultiplier = 1.2;
+                    break;
+                case 'mid':
+                    layerTimeMultiplier = 1.0;
+                    break;
+                case 'production':
+                    layerTimeMultiplier = 0.8;
+                    break;
+                case 'multi-laser':
+                    layerTimeMultiplier = 0.5;
+                    break;
+                case 'precious':
+                    layerTimeMultiplier = 1.1;
+                    break;
+                default:
+                    layerTimeMultiplier = 1.0;
+            }
+            
+            // Adjust layer time based on layer thickness
+            let thicknessMultiplier;
+            switch(layerThickness) {
+                case 0.02:
+                    thicknessMultiplier = 1.5;
+                    break;
+                case 0.03:
+                    thicknessMultiplier = 1.2;
+                    break;
+                case 0.05:
+                    thicknessMultiplier = 1.0;
+                    break;
+                case 0.06:
+                    thicknessMultiplier = 0.9;
+                    break;
+                default:
+                    thicknessMultiplier = 1.0;
+            }
+            
+            const adjustedLayerTime = avgLayerTime * layerTimeMultiplier * thicknessMultiplier;
+            
+            // Calculate complexity factor based on score
+            const complexityFactor = complexity / 20; // Range: 0.05 - 0.5
+            
+            // Calculate total build time in hours
+            const totalBuildTime = baseSetupTime + ((layers * adjustedLayerTime / 3600) * (1 + complexityFactor));
+            
+            // Store build time for later use
+            calculationParams.buildTime = totalBuildTime;
+            
+            // 3. Calculate machine hourly rate
+            // Machine Hourly Rate = (Machine Cost ÷ Depreciation Period ÷ Annual Operating Hours) + (Maintenance)
+            // We use the pre-calculated hourly rate from the machines database
+            
+            // 4. Calculate machine setup cost
+            const machineSetupCost = machine.setupCost;
+            
+            // 5. Calculate energy cost
+            const powerConsumption = 10; // kW, average
+            const electricityRate = 8; // ₹/kWh
+            const energyCost = powerConsumption * totalBuildTime * electricityRate;
+            
+            // 6. Total machine cost
+            const engineerRate = laborRates.engineer;
+            const machineCost = (buildPrepTime * engineerRate) + (totalBuildTime * machine.hourlyRate) + machineSetupCost + energyCost;
+            
+            // Apply batch discount based on quantity for machine time
+            let batchDiscount = 1.0;
+            if (quantity > 50) {
+                batchDiscount = 0.65; // 35% discount for large batches (more efficient use of build chamber)
+            } else if (quantity > 25) {
+                batchDiscount = 0.70; // 30% discount
+            } else if (quantity > 12) {
+                batchDiscount = 0.75; // 25% discount
+            } else if (quantity > 5) {
+                batchDiscount = 0.85; // 15% discount
+            } else if (quantity > 1) {
+                batchDiscount = 0.95; // 5% discount
+            }
+            
+            calculationParams.machineCost = machineCost * batchDiscount;
+            
+            // Store details for the detailed breakdown
+            calculationParams.buildPrepTime = buildPrepTime;
+            calculationParams.machineHourlyRate = machine.hourlyRate;
+            calculationParams.engineerRate = engineerRate;
+            calculationParams.machineSetupCost = machineSetupCost;
+            calculationParams.energyCost = energyCost;
+            
+            return calculationParams.machineCost;
+        }
+        
+        function calculatePostProcessingCost(supportRemoval, heatTreatment, machining, polishing, coating, qualityInspection, supportDensity, quantity) {
+            // Post-Processing Cost = Support Removal + Heat Treatment + Surface Finishing + Quality Control
+            let totalPostProcessing = 0;
+            
+            // 1. Support removal cost
+            let supportRemovalCost = 0;
+            if (supportRemoval) {
+                const supportComplexity = parseFloat(modelData.complexityScore) / 10 + 0.5; // Range: 0.5-1.5
+                let partSizeFactor = 1.0;
+                
+                if (calculationParams.partVolume > 100) {
+                    partSizeFactor = 2.0;
+                } else if (calculationParams.partVolume > 50) {
+                    partSizeFactor = 1.5;
+                } else if (calculationParams.partVolume > 20) {
+                    partSizeFactor = 1.2;
+                }
+                
+                // Adjust support density factor
+                let supportDensityFactor = 1.0;
+                switch(supportDensity) {
+                    case 'low':
+                        supportDensityFactor = 0.7;
+                        break;
+                    case 'medium':
+                        supportDensityFactor = 1.0;
+                        break;
+                    case 'high':
+                        supportDensityFactor = 1.3;
+                        break;
+                }
+                
+                const laborRate = postProcessingCosts.supportRemoval.laborRate;
+                let removalTime = postProcessingCosts.supportRemoval.baseTime[supportDensity] || 1.0;
+                removalTime *= supportComplexity * partSizeFactor;
+                
+                supportRemovalCost = supportComplexity * partSizeFactor * laborRate * removalTime;
+            }
+            
+            // 2. Heat treatment cost
+            let heatTreatmentCost = 0;
+            if (heatTreatment) {
+                const baseCost = postProcessingCosts.heatTreatment.baseCost;
+                const volumeFactor = postProcessingCosts.heatTreatment.volumeFactor;
+                const setupCost = postProcessingCosts.heatTreatment.setupCost;
+                
+                heatTreatmentCost = baseCost + (calculationParams.partVolume * volumeFactor) + setupCost;
+                
+                // Apply batch discount for heat treatment if multiple parts
+                if (quantity > 1) {
+                    // Base cost and setup cost are shared, only volume factor scales with quantity
+                    heatTreatmentCost = baseCost + (calculationParams.partVolume * volumeFactor * quantity) + setupCost;
+                    heatTreatmentCost /= quantity; // Per-part cost
+                }
+            }
+            
+            // 3. Surface finishing cost
+            let surfaceFinishingCost = 0;
+            
+            // Bead blasting is applied to all parts that have support removal
+            if (supportRemoval) {
+                surfaceFinishingCost += postProcessingCosts.surfaceFinishing.beadBlasting.baseCost + 
+                                      (calculationParams.surfaceArea * postProcessingCosts.surfaceFinishing.beadBlasting.costPerCm2);
+            }
+            
+            // Optional polishing
+            if (polishing) {
+                surfaceFinishingCost += postProcessingCosts.surfaceFinishing.polishing.baseCost + 
+                                      (calculationParams.surfaceArea * postProcessingCosts.surfaceFinishing.polishing.costPerCm2);
+            }
+            
+            // Optional machining
+            if (machining) {
+                surfaceFinishingCost += postProcessingCosts.surfaceFinishing.machining.baseCost + 
+                                      (calculationParams.surfaceArea * postProcessingCosts.surfaceFinishing.machining.costPerCm2);
+            }
+            
+            // Optional coating
+            if (coating) {
+                surfaceFinishingCost += postProcessingCosts.surfaceFinishing.coating.baseCost + 
+                                      (calculationParams.surfaceArea * postProcessingCosts.surfaceFinishing.coating.costPerCm2);
+            }
+            
+            // 4. Quality control cost
+            let qualityControlCost = 0;
+            
+            // Visual inspection is always included
+            qualityControlCost += postProcessingCosts.qualityControl.visual.cost;
+            
+            // Different levels of dimensional verification
+            switch(qualityInspection) {
+                case 'basic':
+                    qualityControlCost += postProcessingCosts.qualityControl.dimensional.basic;
+                    qualityControlCost += postProcessingCosts.qualityControl.documentation.basic;
+                    break;
+                case 'standard':
+                    qualityControlCost += postProcessingCosts.qualityControl.dimensional.standard;
+                    qualityControlCost += postProcessingCosts.qualityControl.documentation.standard;
+                    break;
+                case 'comprehensive':
+                    qualityControlCost += postProcessingCosts.qualityControl.dimensional.comprehensive;
+                    qualityControlCost += postProcessingCosts.qualityControl.documentation.comprehensive;
+                    break;
+                case 'advanced':
+                    qualityControlCost += postProcessingCosts.qualityControl.dimensional.advanced;
+                    qualityControlCost += postProcessingCosts.qualityControl.documentation.advanced;
+                    break;
+            }
+            
+            // Apply quantity discount for post-processing
+            let batchDiscount = 1.0;
+            if (quantity > 50) {
+                batchDiscount = 0.70; // 30% discount for large batches
+            } else if (quantity > 25) {
+                batchDiscount = 0.75; // 25% discount
+            } else if (quantity > 12) {
+                batchDiscount = 0.80; // 20% discount
+            } else if (quantity > 5) {
+                batchDiscount = 0.85; // 15% discount
+            } else if (quantity > 1) {
+                batchDiscount = 0.90; // 10% discount
+            }
+            
+            // Combine all post-processing costs
+            totalPostProcessing = (supportRemovalCost + heatTreatmentCost + surfaceFinishingCost + qualityControlCost) * batchDiscount;
+            
+            calculationParams.postProcessingCost = totalPostProcessing;
+            
+            // Store details for the detailed breakdown
+            calculationParams.supportRemovalCost = supportRemovalCost * batchDiscount;
+            calculationParams.heatTreatmentCost = heatTreatmentCost * batchDiscount;
+            calculationParams.surfaceFinishingCost = surfaceFinishingCost * batchDiscount;
+            calculationParams.qualityControlCost = qualityControlCost * batchDiscount;
+            
+            return calculationParams.postProcessingCost;
+        }
+        
+        function calculateLaborCost(quantity) {
+            // Labor Cost = Design Optimization + Production Management
+            
+            // 1. Design optimization cost
+            // Complexity Factor × Design Engineer Rate × Optimization Hours
+            const complexity = parseFloat(modelData.complexityScore) / 10 + 1; // Range: 1.0-2.0
+            const designEngineerRate = laborRates.senior;
+            
+            // Optimization hours based on complexity
+            let optimizationHours;
+            if (complexity < 1.3) {
+                optimizationHours = 2;
+            } else if (complexity < 1.7) {
+                optimizationHours = 4;
+            } else {
+                optimizationHours = 6;
+            }
+            
+            const designOptimizationCost = complexity * designEngineerRate * optimizationHours;
+            
+            // 2. Production management cost
+            // (Total Direct Costs) × Management Factor
+            const directCosts = calculationParams.materialCost + calculationParams.machineCost + calculationParams.postProcessingCost;
+            const managementFactor = 0.08; // 8% of direct costs
+            
+            const productionManagementCost = directCosts * managementFactor;
+            
+            // Total labor cost
+            calculationParams.laborCost = designOptimizationCost + productionManagementCost;
+            
+            // For multiple parts, design optimization is shared
+            if (quantity > 1) {
+                calculationParams.laborCost = (designOptimizationCost / quantity) + productionManagementCost;
+            }
+            
+            // Store details for the detailed breakdown
+            calculationParams.designOptimizationCost = designOptimizationCost / quantity;
+            calculationParams.productionManagementCost = productionManagementCost;
+            
+            return calculationParams.laborCost;
+        }
+        
+        function calculateOverheadCost(industry, margin, quantity) {
+            // Overhead Cost = (Subtotal of All Direct Costs) × Overhead Rate × (1 + Profit Margin)
+            
+            // Get the appropriate overhead rate based on industry
+            const overheadRate = overheadRates[industry] || 0.25; // Default to 25%
+            
+            // Calculate direct costs subtotal
+            const directCostsSubtotal = calculationParams.materialCost + 
+                                       calculationParams.machineCost + 
+                                       calculationParams.postProcessingCost + 
+                                       calculationParams.laborCost;
+            
+            calculationParams.overheadCost = directCostsSubtotal * overheadRate * (1 + margin);
+            
+            // Store details for the detailed breakdown
+            calculationParams.directCostsSubtotal = directCostsSubtotal;
+            calculationParams.overheadRate = overheadRate;
+            calculationParams.profitMargin = margin;
+            
+            return calculationParams.overheadCost;
+        }
+        
+        function calculateTotalCost(quantity) {
+            // Total Cost = Material Cost + Machine Cost + Post-Processing Cost + Labor Cost + Overhead Cost
+            calculationParams.totalCost = calculationParams.materialCost +
+                                         calculationParams.machineCost +
+                                         calculationParams.postProcessingCost +
+                                         calculationParams.laborCost +
+                                         calculationParams.overheadCost;
+            
+            return calculationParams.totalCost;
+        }
+
+        function updateQuoteSummary() {
+            // Update based on current parameters and calculations
+            const projectName = document.getElementById('project-name').value;
+            const industrySelect = document.getElementById('industry');
+            const industry = industrySelect.options[industrySelect.selectedIndex].text;
+            const reqDate = document.getElementById('required-date').value;
+            const quantity = parseInt(document.getElementById('quantity').value);
+            const marginPercentage = document.getElementById('margin-percentage').value;
+            const layerThicknessSelect = document.getElementById('layer-thickness');
+            const layerThickness = layerThicknessSelect.options[layerThicknessSelect.selectedIndex].text;
+            
+            // Update quick summary
+            document.getElementById('quick-project-name').textContent = projectName;
+            document.getElementById('quick-material').textContent = selectedMaterial ? selectedMaterial.name : '-';
+            document.getElementById('quick-quantity').textContent = quantity;
+            document.getElementById('quick-margin').textContent = `${marginPercentage}%`;
+            
+            // Calculate lead time based on quantity, complexity, and material
+            const complexity = parseFloat(modelData.complexityScore);
+            let baseLeadTime = 7; // Base lead time in days
+            
+            // Adjust for quantity
+            if (quantity > 50) {
+                baseLeadTime = 21;
+            } else if (quantity > 25) {
+                baseLeadTime = 17;
+            } else if (quantity > 10) {
+                baseLeadTime = 14;
+            } else if (quantity > 5) {
+                baseLeadTime = 10;
+            } else if (quantity > 1) {
+                baseLeadTime = 8;
+            }
+            
+            // Adjust for complexity
+            if (complexity > 8) {
+                baseLeadTime += 5;
+            } else if (complexity > 5) {
+                baseLeadTime += 3;
+            }
+            
+            // Adjust for material
+            if (selectedMaterial.category === "Precious Metals") {
+                baseLeadTime += 3;
+            } else if (selectedMaterial.category === "Titanium") {
+                baseLeadTime += 2;
+            }
+            
+            document.getElementById('quick-lead-time').textContent = baseLeadTime;
+            
+            // Update quote amount
+            const totalCost = Math.round(calculationParams.totalCost);
+            const costPerPart = totalCost / quantity;
+            
+            document.getElementById('quote-amount').innerHTML = 
+                `₹${totalCost.toLocaleString()}
+                <small id="quote-per-part">₹${Math.round(costPerPart).toLocaleString()} per part</small>`;
+            
+            // Update detailed summary
+            document.getElementById('summary-project-name').textContent = projectName;
+            document.getElementById('summary-industry').textContent = industry;
+            document.getElementById('summary-required-date').textContent = new Date(reqDate).toLocaleDateString();
+            document.getElementById('summary-quantity').textContent = quantity;
+            
+            document.getElementById('summary-material').textContent = selectedMaterial ? selectedMaterial.name : '-';
+            document.getElementById('summary-volume').textContent = modelData.volume;
+            document.getElementById('summary-support-volume').textContent = modelData.supportVolume;
+            document.getElementById('summary-dimensions').textContent = modelData.dimensions;
+            document.getElementById('summary-layer-thickness').textContent = layerThickness;
+            document.getElementById('summary-build-time').textContent = calculationParams.buildTime.toFixed(2);
+            
+            // Update cost breakdown
+            document.getElementById('material-cost').textContent = `₹${Math.round(calculationParams.materialCost).toLocaleString()}`;
+            document.getElementById('machine-cost').textContent = `₹${Math.round(calculationParams.machineCost).toLocaleString()}`;
+            document.getElementById('post-processing-cost').textContent = `₹${Math.round(calculationParams.postProcessingCost).toLocaleString()}`;
+            document.getElementById('labor-cost').textContent = `₹${Math.round(calculationParams.laborCost).toLocaleString()}`;
+            document.getElementById('overhead-cost').textContent = `₹${Math.round(calculationParams.overheadCost).toLocaleString()}`;
+            document.getElementById('total-cost').textContent = `₹${Math.round(calculationParams.totalCost).toLocaleString()}`;
+            
+            // Calculate percentages
+            const total = calculationParams.totalCost;
+            document.getElementById('material-cost-percentage').textContent = `${Math.round(calculationParams.materialCost / total * 100)}%`;
+            document.getElementById('machine-cost-percentage').textContent = `${Math.round(calculationParams.machineCost / total * 100)}%`;
+            document.getElementById('post-processing-cost-percentage').textContent = `${Math.round(calculationParams.postProcessingCost / total * 100)}%`;
+            document.getElementById('labor-cost-percentage').textContent = `${Math.round(calculationParams.laborCost / total * 100)}%`;
+            document.getElementById('overhead-cost-percentage').textContent = `${Math.round(calculationParams.overheadCost / total * 100)}%`;
+            
+            // Update detailed cost breakdown
+            updateDetailedCostBreakdown();
+            
+            // Generate optimization suggestions
+            generateOptimizationSuggestions();
+        }
+        
+        function updateDetailedCostBreakdown() {
+            // Material costs
+            document.getElementById('detail-part-volume').textContent = `${parseFloat(modelData.volume).toFixed(2)} cm³`;
+            document.getElementById('detail-support-volume').textContent = `${parseFloat(modelData.supportVolume).toFixed(2)} cm³`;
+            document.getElementById('detail-material-density').textContent = `${selectedMaterial.density} g/cm³`;
+            
+            // Adjust material price based on powder type
+            let materialPrice = selectedMaterial.price;
+            if (powderType === 'mixed' && selectedMaterial.category !== "Precious Metals") {
+                materialPrice = selectedMaterial.price * 0.85;
+            } else if (powderType === 'recycled' && selectedMaterial.category !== "Precious Metals") {
+                materialPrice = selectedMaterial.recycledPrice;
+            }
+            
+            document.getElementById('detail-material-price').textContent = `₹${materialPrice.toLocaleString()}/kg`;
+            document.getElementById('detail-waste-factor').textContent = `${(selectedMaterial.wasteFactor * 100).toFixed(1)}%`;
+            document.getElementById('detail-material-cost').textContent = `₹${Math.round(calculationParams.materialCost).toLocaleString()}`;
+            
+            // Machine costs
+            document.getElementById('detail-prep-time').textContent = `${calculationParams.buildPrepTime.toFixed(1)} hours`;
+            document.getElementById('detail-engineer-rate').textContent = `₹${calculationParams.engineerRate.toLocaleString()}/hour`;
+            document.getElementById('detail-build-time').textContent = `${calculationParams.buildTime.toFixed(2)} hours`;
+            document.getElementById('detail-machine-rate').textContent = `₹${calculationParams.machineHourlyRate.toLocaleString()}/hour`;
+            document.getElementById('detail-machine-setup').textContent = `₹${calculationParams.machineSetupCost.toLocaleString()}`;
+            document.getElementById('detail-energy-cost').textContent = `₹${Math.round(calculationParams.energyCost).toLocaleString()}`;
+            document.getElementById('detail-machine-cost').textContent = `₹${Math.round(calculationParams.machineCost).toLocaleString()}`;
+            
+            // Post-processing costs
+            document.getElementById('detail-support-removal').textContent = `₹${Math.round(calculationParams.supportRemovalCost).toLocaleString()}`;
+            document.getElementById('detail-heat-treatment').textContent = `₹${Math.round(calculationParams.heatTreatmentCost).toLocaleString()}`;
+            document.getElementById('detail-surface-finishing').textContent = `₹${Math.round(calculationParams.surfaceFinishingCost).toLocaleString()}`;
+            document.getElementById('detail-quality-control').textContent = `₹${Math.round(calculationParams.qualityControlCost).toLocaleString()}`;
+            document.getElementById('detail-post-processing').textContent = `₹${Math.round(calculationParams.postProcessingCost).toLocaleString()}`;
+            
+            // Labor costs
+            document.getElementById('detail-design-optimization').textContent = `₹${Math.round(calculationParams.designOptimizationCost).toLocaleString()}`;
+            document.getElementById('detail-production-management').textContent = `₹${Math.round(calculationParams.productionManagementCost).toLocaleString()}`;
+            document.getElementById('detail-labor-cost').textContent = `₹${Math.round(calculationParams.laborCost).toLocaleString()}`;
+            
+            // Overhead costs
+            document.getElementById('detail-direct-subtotal').textContent = `₹${Math.round(calculationParams.directCostsSubtotal).toLocaleString()}`;
+            document.getElementById('detail-overhead-rate').textContent = `${(calculationParams.overheadRate * 100).toFixed(1)}%`;
+            document.getElementById('detail-profit-margin').textContent = `${(calculationParams.profitMargin * 100).toFixed(1)}%`;
+            document.getElementById('detail-overhead-cost').textContent = `₹${Math.round(calculationParams.overheadCost).toLocaleString()}`;
+        }
+        
+        function generateOptimizationSuggestions() {
+            const suggestions = [];
+            
+            // Check material cost percentage
+            const materialPercentage = calculationParams.materialCost / calculationParams.totalCost * 100;
+            if (materialPercentage > 30 && selectedMaterial.category !== "Precious Metals") {
+                suggestions.push("Consider using recycled powder for non-critical components to reduce material costs by 15-30%");
+            }
+            
+            // Check support volume ratio
+            const supportRatio = calculationParams.supportVolume / calculationParams.partVolume;
+            if (supportRatio > 0.25) {
+                suggestions.push("Optimize part orientation to reduce support structures - this can save 5-15% on overall costs");
+            }
+            
+            // Check build time
+            if (calculationParams.buildTime > 24) {
+                suggestions.push("Consider using a faster layer thickness (50-60 μm) to reduce build time and machine costs");
+            }
+            
+            // Check batch size
+            const quantity = parseInt(document.getElementById('quantity').value);
+            if (quantity === 1) {
+                suggestions.push("Batch production can reduce per-unit cost by 15-65% depending on quantity - consider producing multiple parts in a single build");
+            }
+            
+            // Check material selection for expensive materials
+            if (selectedMaterial.price > 15000 && selectedMaterial.category !== "Precious Metals") {
+                suggestions.push("Evaluate if a more economical material could meet your requirements - this could reduce material costs by 20-50%");
+            }
+            
+            // Check post-processing
+            const polishing = document.getElementById('polishing').checked;
+            const coating = document.getElementById('coating').checked;
+            const machining = document.getElementById('machining').checked;
+            
+            if (polishing && coating && machining) {
+                suggestions.push("Multiple finishing operations significantly increase costs - consider if all three (polishing, coating, and machining) are necessary");
+            }
+            
+            // Check quality inspection level
+            const qualityInspection = document.getElementById('quality-inspection').value;
+            if (qualityInspection === 'advanced') {
+                suggestions.push("Advanced quality inspection adds significant cost - consider if comprehensive inspection would be sufficient for your application");
+            }
+            
+            // Add suggestions to list
+            const suggestionList = document.getElementById('optimization-suggestions');
+            suggestionList.innerHTML = '';
+            
+            if (suggestions.length === 0) {
+                const li = document.createElement('li');
+                li.textContent = "Your quote is already well-optimized for cost efficiency";
+                suggestionList.appendChild(li);
+            } else {
+                suggestions.forEach(suggestion => {
+                    const li = document.createElement('li');
+                    li.textContent = suggestion;
+                    suggestionList.appendChild(li);
+                });
+            }
+        }
+        
+        function toggleCostBreakdown() {
+            const breakdownToggle = document.getElementById('cost-breakdown-toggle');
+            const breakdownDetail = document.getElementById('cost-breakdown-detail');
+            
+            if (breakdownToggle && breakdownDetail) {
+                if (breakdownDetail.style.display === 'block') {
+                    breakdownDetail.style.display = 'none';
+                    breakdownToggle.classList.remove('expanded');
+                } else {
+                    breakdownDetail.style.display = 'block';
+                    breakdownToggle.classList.add('expanded');
+                }
+            }
+        }
+        
+        function toggleCostDetail(header) {
+            const body = header.nextElementSibling;
+            
+            if (body) {
+                if (body.classList.contains('active')) {
+                    body.classList.remove('active');
+                    header.classList.remove('active');
+                } else {
+                    body.classList.add('active');
+                    header.classList.add('active');
+                }
+            }
+        }
+
+        function generatePDF(type) {
+            // In a real application, implement PDF generation with html2pdf.js
+            alert(`Generating ${type} PDF... This would use html2pdf.js in a production environment.`);
+            
+            // Example implementation with html2pdf would be:
+            /*
+            const element = document.getElementById('quote-summary');
+            const opt = {
+                margin: 10,
+                filename: `DMLS_Quote_${document.getElementById('project-name').value}_${new Date().toISOString().slice(0,10)}.pdf`,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2 },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+            
+            html2pdf().set(opt).from(element).save();
+            */
+        }
+
+        function restartCalculator() {
+            // Reset to first step
+            document.querySelectorAll('.form-section').forEach(section => {
+                section.classList.remove('active');
+            });
+            
+            document.querySelectorAll('.step').forEach(step => {
+                step.classList.remove('active');
+                step.classList.remove('completed');
+            });
+            
+            document.getElementById('step-1').classList.add('active');
+            document.getElementById('step-indicator-1').classList.add('active');
+            
+            // Reset form values
+            document.getElementById('project-name').value = '';
+            
+            const today = new Date();
+            const dateStr = today.toISOString().split('T')[0];
+            document.getElementById('required-date').value = '';
+            
+            document.getElementById('quantity').value = '1';
+            document.getElementById('industry').value = '';
+            document.getElementById('part-function').value = '';
+            
+            // Reset model data
+            modelData = null;
+            document.getElementById('model-file').value = '';
+            document.getElementById('manual-volume').value = '';
+            document.getElementById('manual-dimensions').value = '';
+            document.getElementById('model-info').style.display = 'none';
+            document.getElementById('step2-next').disabled = true;
+            
+            // Reset material selection
+            selectedMaterial = null;
+            document.querySelectorAll('.material-card').forEach(card => {
+                card.classList.remove('selected');
+            });
+            document.getElementById('step3-next').disabled = true;
+            
+            // Hide all industry panels
+            document.querySelectorAll('.industry-panel').forEach(panel => {
+                panel.classList.remove('active');
+            });
+            
+            // Reset powder type
+            document.getElementById('virgin-powder').checked = true;
+            document.getElementById('powder-recycling-options').style.display = 'none';
+            
+            // Reset to step 1
+            currentStep = 1;
+        }
+    </script>
+</body>
+</html>
+                
