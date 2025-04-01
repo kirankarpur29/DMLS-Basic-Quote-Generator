@@ -3182,22 +3182,341 @@
         }
 
         function generatePDF(type) {
-            // In a real application, implement PDF generation with html2pdf.js
-            alert(`Generating ${type} PDF... This would use html2pdf.js in a production environment.`);
+            // Create a container for PDF content
+            const pdfContainer = document.createElement('div');
+            pdfContainer.style.width = '210mm';
+            pdfContainer.style.padding = '15mm';
+            pdfContainer.style.backgroundColor = 'white';
+            pdfContainer.style.color = 'black';
             
-            // Example implementation with html2pdf would be:
-            /*
-            const element = document.getElementById('quote-summary');
+            // Add header
+            const header = document.createElement('div');
+            header.style.textAlign = 'center';
+            header.style.marginBottom = '20px';
+            header.innerHTML = `
+                <h1 style="color: #0066cc; margin-bottom: 5px;">DMLS 3D Printing Quote</h1>
+                <h2 style="color: #666; font-size: 18px; margin-top: 0;">
+                    ${type === 'detailed' ? 'Detailed Quotation' : 'Summary Quotation'}
+                </h2>
+                <div style="margin-top: 15px; color: #333; font-size: 14px;">
+                    <p>Generated: ${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()}</p>
+                    <p>Quote Reference: DMLS-${Math.floor(Math.random() * 10000).toString().padStart(4, '0')}</p>
+                </div>
+            `;
+            pdfContainer.appendChild(header);
+            
+            // Project Information Section
+            const projectInfo = document.createElement('div');
+            projectInfo.style.marginBottom = '20px';
+            projectInfo.style.padding = '10px';
+            projectInfo.style.border = '1px solid #ddd';
+            projectInfo.style.borderRadius = '5px';
+            projectInfo.style.backgroundColor = '#f9f9f9';
+            
+            projectInfo.innerHTML = `
+                <h3 style="margin-top: 0; color: #0066cc; border-bottom: 1px solid #ddd; padding-bottom: 5px;">Project Information</h3>
+                <table style="width: 100%; border-collapse: collapse;">
+                    <tr>
+                        <td style="padding: 5px; width: 40%;"><strong>Project Name:</strong></td>
+                        <td style="padding: 5px;">${document.getElementById('project-name').value || 'Not specified'}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 5px;"><strong>Industry:</strong></td>
+                        <td style="padding: 5px;">${document.getElementById('industry').options[document.getElementById('industry').selectedIndex].text}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 5px;"><strong>Required Date:</strong></td>
+                        <td style="padding: 5px;">${document.getElementById('required-date').value ? new Date(document.getElementById('required-date').value).toLocaleDateString() : 'Not specified'}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 5px;"><strong>Production Quantity:</strong></td>
+                        <td style="padding: 5px;">${document.getElementById('quantity').value}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 5px;"><strong>Estimated Lead Time:</strong></td>
+                        <td style="padding: 5px;">${document.getElementById('quick-lead-time').textContent} days</td>
+                    </tr>
+                </table>
+            `;
+            pdfContainer.appendChild(projectInfo);
+            
+            // Part Specifications Section
+            const partSpecs = document.createElement('div');
+            partSpecs.style.marginBottom = '20px';
+            partSpecs.style.padding = '10px';
+            partSpecs.style.border = '1px solid #ddd';
+            partSpecs.style.borderRadius = '5px';
+            partSpecs.style.backgroundColor = '#f9f9f9';
+            
+            partSpecs.innerHTML = `
+                <h3 style="margin-top: 0; color: #0066cc; border-bottom: 1px solid #ddd; padding-bottom: 5px;">Part Specifications</h3>
+                <table style="width: 100%; border-collapse: collapse;">
+                    <tr>
+                        <td style="padding: 5px; width: 40%;"><strong>Material:</strong></td>
+                        <td style="padding: 5px;">${selectedMaterial ? selectedMaterial.name : 'Not selected'}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 5px;"><strong>Part Volume:</strong></td>
+                        <td style="padding: 5px;">${modelData ? modelData.volume : 'N/A'} cm³</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 5px;"><strong>Support Volume:</strong></td>
+                        <td style="padding: 5px;">${modelData ? modelData.supportVolume : 'N/A'} cm³</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 5px;"><strong>Dimensions:</strong></td>
+                        <td style="padding: 5px;">${modelData ? modelData.dimensions : 'N/A'}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 5px;"><strong>Complexity Score:</strong></td>
+                        <td style="padding: 5px;">${modelData ? modelData.complexityScore : 'N/A'} / 10</td>
+                    </tr>
+                </table>
+            `;
+            pdfContainer.appendChild(partSpecs);
+            
+            // Process Parameters Section
+            const processParams = document.createElement('div');
+            processParams.style.marginBottom = '20px';
+            processParams.style.padding = '10px';
+            processParams.style.border = '1px solid #ddd';
+            processParams.style.borderRadius = '5px';
+            processParams.style.backgroundColor = '#f9f9f9';
+            
+            processParams.innerHTML = `
+                <h3 style="margin-top: 0; color: #0066cc; border-bottom: 1px solid #ddd; padding-bottom: 5px;">Process Parameters</h3>
+                <table style="width: 100%; border-collapse: collapse;">
+                    <tr>
+                        <td style="padding: 5px; width: 40%;"><strong>Layer Thickness:</strong></td>
+                        <td style="padding: 5px;">${document.getElementById('layer-thickness').options[document.getElementById('layer-thickness').selectedIndex].text}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 5px;"><strong>Build Orientation:</strong></td>
+                        <td style="padding: 5px;">${document.getElementById('build-orientation').options[document.getElementById('build-orientation').selectedIndex].text}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 5px;"><strong>Support Structure Density:</strong></td>
+                        <td style="padding: 5px;">${document.getElementById('support-density').options[document.getElementById('support-density').selectedIndex].text}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 5px;"><strong>Machine Type:</strong></td>
+                        <td style="padding: 5px;">${document.getElementById('machine-type').options[document.getElementById('machine-type').selectedIndex].text}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 5px;"><strong>Estimated Build Time:</strong></td>
+                        <td style="padding: 5px;">${calculationParams.buildTime.toFixed(2)} hours</td>
+                    </tr>
+                </table>
+            `;
+            pdfContainer.appendChild(processParams);
+            
+            // Post-Processing Section
+            const postProcessing = document.createElement('div');
+            postProcessing.style.marginBottom = '20px';
+            postProcessing.style.padding = '10px';
+            postProcessing.style.border = '1px solid #ddd';
+            postProcessing.style.borderRadius = '5px';
+            postProcessing.style.backgroundColor = '#f9f9f9';
+            
+            const supportRemoval = document.getElementById('support-removal').checked;
+            const heatTreatment = document.getElementById('heat-treatment').checked;
+            const machining = document.getElementById('machining').checked;
+            const polishing = document.getElementById('polishing').checked;
+            const coating = document.getElementById('coating').checked;
+            
+            postProcessing.innerHTML = `
+                <h3 style="margin-top: 0; color: #0066cc; border-bottom: 1px solid #ddd; padding-bottom: 5px;">Post-Processing & Quality</h3>
+                <table style="width: 100%; border-collapse: collapse;">
+                    <tr>
+                        <td style="padding: 5px; width: 40%;"><strong>Support Removal:</strong></td>
+                        <td style="padding: 5px;">${supportRemoval ? 'Yes' : 'No'}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 5px;"><strong>Heat Treatment:</strong></td>
+                        <td style="padding: 5px;">${heatTreatment ? 'Yes' : 'No'}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 5px;"><strong>Machining:</strong></td>
+                        <td style="padding: 5px;">${machining ? 'Yes' : 'No'}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 5px;"><strong>Surface Polishing:</strong></td>
+                        <td style="padding: 5px;">${polishing ? 'Yes' : 'No'}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 5px;"><strong>Surface Coating/Plating:</strong></td>
+                        <td style="padding: 5px;">${coating ? 'Yes' : 'No'}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 5px;"><strong>Quality Inspection Level:</strong></td>
+                        <td style="padding: 5px;">${document.getElementById('quality-inspection').options[document.getElementById('quality-inspection').selectedIndex].text}</td>
+                    </tr>
+                </table>
+            `;
+            pdfContainer.appendChild(postProcessing);
+            
+            // Quote Summary
+            const quoteSummary = document.createElement('div');
+            quoteSummary.style.marginBottom = '20px';
+            quoteSummary.style.padding = '15px';
+            quoteSummary.style.border = '2px solid #0066cc';
+            quoteSummary.style.borderRadius = '5px';
+            quoteSummary.style.backgroundColor = '#f0f7ff';
+            
+            const totalCost = Math.round(calculationParams.totalCost);
+            const costPerPart = totalCost / parseInt(document.getElementById('quantity').value);
+            
+            quoteSummary.innerHTML = `
+                <h3 style="margin-top: 0; color: #0066cc; text-align: center; margin-bottom: 15px;">Quote Summary</h3>
+                <div style="text-align: center; margin-bottom: 20px;">
+                    <span style="font-size: 24px; font-weight: bold; color: #0066cc;">₹${totalCost.toLocaleString()}</span>
+                    <br>
+                    <span style="font-size: 16px; color: #666;">₹${Math.round(costPerPart).toLocaleString()} per part</span>
+                </div>
+            `;
+            
+            // Add detailed cost breakdown table for detailed quote only
+            if (type === 'detailed') {
+                quoteSummary.innerHTML += `
+                    <table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
+                        <tr style="background-color: #e6f0ff;">
+                            <th style="padding: 8px; text-align: left; border-bottom: 1px solid #ddd;">Cost Component</th>
+                            <th style="padding: 8px; text-align: right; border-bottom: 1px solid #ddd;">Amount (₹)</th>
+                            <th style="padding: 8px; text-align: right; border-bottom: 1px solid #ddd;">Percentage</th>
+                        </tr>
+                        <tr>
+                            <td style="padding: 8px; border-bottom: 1px solid #ddd;">Material Cost</td>
+                            <td style="padding: 8px; text-align: right; border-bottom: 1px solid #ddd;">₹${Math.round(calculationParams.materialCost).toLocaleString()}</td>
+                            <td style="padding: 8px; text-align: right; border-bottom: 1px solid #ddd;">${Math.round(calculationParams.materialCost / calculationParams.totalCost * 100)}%</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 8px; border-bottom: 1px solid #ddd;">Machine Cost</td>
+                            <td style="padding: 8px; text-align: right; border-bottom: 1px solid #ddd;">₹${Math.round(calculationParams.machineCost).toLocaleString()}</td>
+                            <td style="padding: 8px; text-align: right; border-bottom: 1px solid #ddd;">${Math.round(calculationParams.machineCost / calculationParams.totalCost * 100)}%</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 8px; border-bottom: 1px solid #ddd;">Post-Processing Cost</td>
+                            <td style="padding: 8px; text-align: right; border-bottom: 1px solid #ddd;">₹${Math.round(calculationParams.postProcessingCost).toLocaleString()}</td>
+                            <td style="padding: 8px; text-align: right; border-bottom: 1px solid #ddd;">${Math.round(calculationParams.postProcessingCost / calculationParams.totalCost * 100)}%</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 8px; border-bottom: 1px solid #ddd;">Labor Cost</td>
+                            <td style="padding: 8px; text-align: right; border-bottom: 1px solid #ddd;">₹${Math.round(calculationParams.laborCost).toLocaleString()}</td>
+                            <td style="padding: 8px; text-align: right; border-bottom: 1px solid #ddd;">${Math.round(calculationParams.laborCost / calculationParams.totalCost * 100)}%</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 8px; border-bottom: 1px solid #ddd;">Overhead & Profit</td>
+                            <td style="padding: 8px; text-align: right; border-bottom: 1px solid #ddd;">₹${Math.round(calculationParams.overheadCost).toLocaleString()}</td>
+                            <td style="padding: 8px; text-align: right; border-bottom: 1px solid #ddd;">${Math.round(calculationParams.overheadCost / calculationParams.totalCost * 100)}%</td>
+                        </tr>
+                        <tr style="font-weight: bold; background-color: #e6f0ff;">
+                            <td style="padding: 8px;">TOTAL</td>
+                            <td style="padding: 8px; text-align: right;">₹${totalCost.toLocaleString()}</td>
+                            <td style="padding: 8px; text-align: right;">100%</td>
+                        </tr>
+                    </table>
+                `;
+                
+                // Add detailed materials breakdown for detailed quote
+                if (selectedMaterial) {
+                    quoteSummary.innerHTML += `
+                        <h4 style="margin-top: 20px; color: #0066cc;">Material Details</h4>
+                        <table style="width: 100%; border-collapse: collapse; margin-top: 5px; font-size: 14px;">
+                            <tr>
+                                <td style="padding: 5px;"><strong>Material Name:</strong></td>
+                                <td style="padding: 5px;">${selectedMaterial.name}</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 5px;"><strong>Material Category:</strong></td>
+                                <td style="padding: 5px;">${selectedMaterial.category}</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 5px;"><strong>Material Density:</strong></td>
+                                <td style="padding: 5px;">${selectedMaterial.density} g/cm³</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 5px;"><strong>Powder Type:</strong></td>
+                                <td style="padding: 5px;">${powderType.charAt(0).toUpperCase() + powderType.slice(1)} Powder</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 5px;"><strong>Material Price:</strong></td>
+                                <td style="padding: 5px;">₹${selectedMaterial.price.toLocaleString()}/kg</td>
+                            </tr>
+                        </table>
+                    `;
+                }
+            }
+            
+            // Add optimization suggestions
+            const optimizationSuggestions = document.createElement('div');
+            optimizationSuggestions.style.marginBottom = '20px';
+            optimizationSuggestions.style.padding = '10px';
+            optimizationSuggestions.style.border = '1px solid #ddd';
+            optimizationSuggestions.style.borderRadius = '5px';
+            optimizationSuggestions.style.backgroundColor = '#f9f9f9';
+            
+            // Get suggestions from the DOM
+            const suggestionsList = document.getElementById('optimization-suggestions');
+            const suggestionsHTML = suggestionsList.innerHTML;
+            
+            optimizationSuggestions.innerHTML = `
+                <h3 style="margin-top: 0; color: #0066cc; border-bottom: 1px solid #ddd; padding-bottom: 5px;">Cost Optimization Suggestions</h3>
+                <div>${suggestionsHTML}</div>
+            `;
+            
+            if (type === 'detailed') {
+                pdfContainer.appendChild(optimizationSuggestions);
+            }
+            
+            // Add terms and conditions
+            const termsSection = document.createElement('div');
+            termsSection.style.marginTop = '30px';
+            termsSection.style.fontSize = '12px';
+            termsSection.style.color = '#666';
+            termsSection.style.borderTop = '1px solid #ddd';
+            termsSection.style.paddingTop = '10px';
+            
+            termsSection.innerHTML = `
+                <h4 style="margin-top: 0; margin-bottom: 5px;">Terms & Conditions</h4>
+                <ol style="margin-top: 5px; padding-left: 20px;">
+                    <li>This quote is valid for 30 days from the date of issue.</li>
+                    <li>50% advance payment is required to begin production.</li>
+                    <li>Delivery timeline begins after receipt of payment and final design approval.</li>
+                    <li>Material properties are subject to standard manufacturing tolerances.</li>
+                    <li>Actual part costs may vary based on final part geometry and orientation.</li>
+                </ol>
+                <p style="text-align: center; margin-top: 20px;">
+                    For questions or to place an order, please contact us at info@dmlsprinting.com
+                </p>
+            `;
+            pdfContainer.appendChild(termsSection);
+            
+            // Add page numbers
+            const footer = document.createElement('div');
+            footer.style.textAlign = 'center';
+            footer.style.marginTop = '30px';
+            footer.style.fontSize = '12px';
+            footer.style.color = '#999';
+            footer.innerHTML = `Page 1 of 1`;
+            pdfContainer.appendChild(footer);
+            
+            // Temporarily append the container to the document
+            document.body.appendChild(pdfContainer);
+            
+            // Set up PDF options
             const opt = {
                 margin: 10,
-                filename: `DMLS_Quote_${document.getElementById('project-name').value}_${new Date().toISOString().slice(0,10)}.pdf`,
+                filename: `DMLS_Quote_${document.getElementById('project-name').value || 'Unnamed'}_${new Date().toISOString().split('T')[0]}.pdf`,
                 image: { type: 'jpeg', quality: 0.98 },
                 html2canvas: { scale: 2 },
                 jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
             };
             
-            html2pdf().set(opt).from(element).save();
-            */
+            // Generate and download the PDF
+            html2pdf().set(opt).from(pdfContainer).save().then(() => {
+                // Remove the temporary container
+                document.body.removeChild(pdfContainer);
+            });
         }
 
         function restartCalculator() {
